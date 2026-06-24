@@ -39,6 +39,9 @@ let emails = [
             { title: 'Request Corrected Origin Certificate', owner: 'Procurement', priority: 'High', dueDate: '2026-06-25' },
             { title: 'Liaise Rotterdam Customs Broker', owner: 'Logistics', priority: 'High', dueDate: '2026-06-26' }
         ],
+        attachments: [
+            { name: 'COO_GasketAssemblies_G8822.pdf', size: '142 KB', content: 'Country of Origin Declaration: Gasket Assemblies #G-8822. Origin: GasketCorp Shanghai, China. Certifying authority: Customs Bureau of Shanghai.' }
+        ],
         draftReply: `Dear DHL Logistics Team,\n\nWe have received your alert regarding the customs hold on Shipment #G-8822.\n\nOur procurement team is currently coordinating with the supplier (GasketCorp) to secure the corrected Certificate of Origin. We will feed this into your clearance desk as soon as it is generated.\n\nMeanwhile, our Rotterdam broker, PortClearance BV, will contact your desk to submit the rectified records. Please maintain active updates on status changes.\n\nRegards,\nSignalOps Operations Command`
     },
     {
@@ -64,6 +67,9 @@ let emails = [
             { title: 'Search Alternative Sourcing Brokers', owner: 'Procurement', priority: 'High', dueDate: '2026-06-26' },
             { title: 'Evaluate Drop-in MCU Replacements', owner: 'Engineering', priority: 'Medium', dueDate: '2026-06-28' }
         ],
+        attachments: [
+            { name: 'Yield_Analysis_Hsinchu_MCU.xlsx', size: '1.4 MB', content: 'Hsinchu Silicon Fab Yield Report: Yield loss of 28% on 12nm MCU wafer run #MCU-90X. Projecting 4 week recovery run.' }
+        ],
         draftReply: `Dear Giga-Electronics Sales Team,\n\nThis delay creates an immediate production stoppage risk for our assembly lines. \n\nPlease process the split shipment of 5,000 units immediately for air-freight dispatch. Send the tracking details to our logistics center.\n\nWe require formal verification of the recovery schedule for the remaining 20,000 units. Our engineering team is currently assessing secondary component options.\n\nRegards,\nSignalOps Operations Command`
     },
     {
@@ -86,6 +92,9 @@ let emails = [
         tasks: [
             { title: 'Identify Affected Containers at Terminal 400', owner: 'Logistics', priority: 'Medium', dueDate: '2026-06-26' }
         ],
+        attachments: [
+            { name: 'Terminal_400_Crane_Advisory.pdf', size: '210 KB', content: 'Terminal 400 mechanical failure status note. Harbor operations closed for gates 401-408.' }
+        ],
         draftReply: `Dear Port Operations Team,\n\nWe acknowledge the advisory regarding the crane structural disruption at Terminal 400.\n\nWe are verifying affected container IDs with our ocean carrier partners. Please communicate when gates reopen for dry container extraction.\n\nRegards,\nSignalOps Operations Command`
     },
     {
@@ -107,6 +116,9 @@ let emails = [
         ],
         tasks: [
             { title: 'Obtain REACH Declarations from Polymers Inc', owner: 'Compliance', priority: 'Critical', dueDate: '2026-06-28' }
+        ],
+        attachments: [
+            { name: 'REACH_PolymersInc_Declaration.pdf', size: '510 KB', content: 'Compliance files for High Density Polyethylene casings (HDPE-209). REACH SVHC list check: Passed.' }
         ],
         draftReply: `Dear EU Compliance Audit Team,\n\nThank you for alerting us to the expired REACH declarations for high-density plastic parts supplied by Polymers Inc.\n\nWe are actively working with the supplier's chemical safety officers to obtain the updated compliance files. We intend to upload these by June 28, ahead of the compliance deadline.\n\nRegards,\nSignalOps Operations Command`
     }
@@ -273,6 +285,44 @@ function selectEmail(emailId) {
         document.getElementById('workspace-reply-card').style.display = 'block';
         document.getElementById('disp-reply-to').textContent = `To: ${email.sender}`;
         document.getElementById('reply-body-field').value = email.draftReply;
+        
+        // Render Attachments & Document Gateway
+        const attachmentsCard = document.getElementById('workspace-attachments-card');
+        const attachmentsContainer = document.getElementById('attachments-container');
+        if (attachmentsCard && attachmentsContainer) {
+            attachmentsContainer.innerHTML = '';
+            if (email.attachments && email.attachments.length > 0) {
+                attachmentsCard.style.display = 'block';
+                email.attachments.forEach((att, attIdx) => {
+                    const attDiv = document.createElement('div');
+                    attDiv.className = 'sidebar-task-item';
+                    attDiv.style.background = 'rgba(255, 255, 255, 0.015)';
+                    attDiv.style.border = '1px solid var(--border-color)';
+                    attDiv.style.borderRadius = '8px';
+                    attDiv.style.padding = '0.75rem';
+                    attDiv.style.display = 'flex';
+                    attDiv.style.justifyContent = 'space-between';
+                    attDiv.style.alignItems = 'center';
+                    attDiv.style.marginTop = '0.5rem';
+                    
+                    attDiv.innerHTML = `
+                        <div style="display:flex; align-items:center; gap:0.5rem;">
+                            <span style="font-size: 1.5rem;">📄</span>
+                            <div>
+                                <div style="font-weight:600; font-size:0.8rem; color:var(--text-primary);">${att.name}</div>
+                                <div style="font-size:0.7rem; color:var(--text-muted);">${att.size}</div>
+                            </div>
+                        </div>
+                        <button class="btn btn-secondary" style="padding:0.35rem 0.6rem; font-size:0.7rem; border-color:var(--neon-cyan); color:var(--neon-cyan); box-shadow:0 0 5px rgba(0, 242, 254, 0.1);" onclick="saveToOneDrive('${email.id}', ${attIdx})">
+                            Save to OneDrive
+                        </button>
+                    `;
+                    attachmentsContainer.appendChild(attDiv);
+                });
+            } else {
+                attachmentsCard.style.display = 'none';
+            }
+        }
         
         // Render extracted tasks
         renderSidebarTasks(email);
@@ -1026,7 +1076,7 @@ async function triggerM365Auth(clientId, tenantId) {
         `&response_type=code` +
         `&redirect_uri=${encodeURIComponent(redirectUri)}` +
         `&response_mode=query` +
-        `&scope=${encodeURIComponent('User.Read Mail.Read Mail.Send offline_access')}` +
+        `&scope=${encodeURIComponent('User.Read Mail.Read Mail.Send Files.ReadWrite offline_access')}` +
         `&code_challenge=${challenge}` +
         `&code_challenge_method=S256`;
 
@@ -1087,7 +1137,7 @@ async function checkM365Callback() {
     const redirectUri = window.location.origin + window.location.pathname;
     const bodyParams = new URLSearchParams({
         client_id: clientId,
-        scope: 'User.Read Mail.Read Mail.Send offline_access',
+        scope: 'User.Read Mail.Read Mail.Send Files.ReadWrite offline_access',
         code: code,
         redirect_uri: redirectUri,
         grant_type: 'authorization_code',
@@ -1291,7 +1341,7 @@ async function refreshM365Token() {
                 client_id: clientId,
                 grant_type: 'refresh_token',
                 refresh_token: refreshToken,
-                scope: 'User.Read Mail.Read Mail.Send offline_access'
+                scope: 'User.Read Mail.Read Mail.Send Files.ReadWrite offline_access'
             })
         });
 
@@ -1307,5 +1357,46 @@ async function refreshM365Token() {
         console.error(e);
     }
     return false;
+}
+
+// Upload attachments directly to Microsoft OneDrive folder
+async function saveToOneDrive(emailId, attachmentIndex) {
+    const email = emails.find(e => e.id === emailId);
+    if (!email || !email.attachments || !email.attachments[attachmentIndex]) return;
+    
+    const att = email.attachments[attachmentIndex];
+    const token = localStorage.getItem('m365_access_token');
+    
+    if (token) {
+        showToast(`Uploading ${att.name} to OneDrive via Graph API...`);
+        
+        try {
+            // Put request to upload content to root:/SignalConsole/filename
+            const response = await fetch(`https://graph.microsoft.com/v1.0/me/drive/root:/SignalConsole/${att.name}:/content`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'text/plain'
+                },
+                body: att.content
+            });
+            
+            if (response.ok) {
+                showToast(`Successfully uploaded ${att.name} to OneDrive folder /SignalConsole/`);
+            } else {
+                const errData = await response.json();
+                showToast('OneDrive Upload Failed: ' + (errData.error.message || response.statusText));
+            }
+        } catch(e) {
+            console.error(e);
+            showToast('OneDrive Network Error: Check internet connection.');
+        }
+    } else {
+        // Simulator fallback
+        showToast(`Simulating OneDrive upload for ${att.name}...`);
+        setTimeout(() => {
+            showToast(`Document ${att.name} successfully saved to OneDrive folder (/SignalConsole/)`);
+        }, 1200);
+    }
 }
 
