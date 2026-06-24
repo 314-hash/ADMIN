@@ -342,6 +342,77 @@
         <span id="toast-message">Task updated successfully</span>
     </div>
 
+    <!-- Welcome Greeting Modal Overlay -->
+    <div class="modal-overlay" id="welcome-modal" style="display: flex;">
+        <div class="glass-panel modal-content" style="width: 520px; text-align: center; padding: 2rem; border-color: var(--neon-cyan); box-shadow: var(--glow-cyan);">
+            <div class="brand-logo" style="width: 60px; height: 60px; font-size: 1.5rem; border-radius: 12px; margin: 0 auto 1.25rem;">SO</div>
+            <h2 style="font-family: 'Outfit', sans-serif; font-size: 1.6rem; margin-bottom: 0.5rem; background: linear-gradient(135deg, #fff, var(--neon-cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">SignalOps AI Active Command Cockpit</h2>
+            <p style="color: var(--text-secondary); font-size: 0.875rem; line-height: 1.6; margin-bottom: 1.5rem;">
+                Supply Chain Operations AI Triage Console initialized.<br>
+                Microsoft 365 Outlook connection and Microsoft Graph API hooks are active.
+            </p>
+            <div class="risk-grid" style="margin-bottom: 1.5rem;">
+                <div class="risk-item" style="padding: 0.5rem;">
+                    <div style="font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase;">Outlook Feed</div>
+                    <div style="color: var(--neon-green); font-weight: bold; font-size: 0.85rem;">CONNECTED</div>
+                </div>
+                <div class="risk-item" style="padding: 0.5rem;">
+                    <div style="font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase;">Graph API</div>
+                    <div style="color: var(--neon-green); font-weight: bold; font-size: 0.85rem;">AUTHORIZED</div>
+                </div>
+                <div class="risk-item" style="padding: 0.5rem;">
+                    <div style="font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase;">Triage Engine</div>
+                    <div style="color: var(--neon-cyan); font-weight: bold; font-size: 0.85rem;">AI ACTIVE</div>
+                </div>
+                <div class="risk-item" style="padding: 0.5rem;">
+                    <div style="font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase;">Vercel Hook</div>
+                    <div style="color: var(--neon-purple); font-weight: bold; font-size: 0.85rem;">READY</div>
+                </div>
+            </div>
+            <button class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="closeWelcomeModal()">
+                Access Operations Command
+            </button>
+        </div>
+    </div>
+
+    <!-- Surprise Celebration / Success Dispatch Modal -->
+    <div class="modal-overlay" id="dispatch-success-modal">
+        <div class="glass-panel modal-content" style="width: 480px; text-align: center; padding: 2.25rem; border-color: var(--neon-green); box-shadow: var(--glow-green); position: relative; overflow: hidden;">
+            <div style="width: 64px; height: 64px; border-radius: 50%; background: rgba(52, 199, 89, 0.1); border: 2px solid var(--neon-green); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem; box-shadow: var(--glow-green);">
+                <svg width="32" height="32" fill="var(--neon-green)" viewBox="0 0 16 16">
+                    <path d="M15.964.686a.5.5 0 0 0-.65-.65L.767 5.855H.766l-.452.18a.5.5 0 0 0-.082.887l.41.26.001.002 4.995 3.178 3.178 4.995.002.002.26.41a.5.5 0 0 0 .886-.083l6-15Zm-1.833 1.89L6.637 10.07l-.215-.338a.5.5 0 0 0-.154-.154l-.338-.215 7.494-7.494 1.178-.471-.47 1.178Z"/>
+                </svg>
+            </div>
+            <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.5rem; margin-bottom: 0.5rem; color: var(--text-primary);">Response Dispatched Successfully</h3>
+            <p style="color: var(--text-secondary); font-size: 0.875rem; line-height: 1.5; margin-bottom: 1.5rem;" id="success-modal-message">
+                Vendor response sent through Microsoft Graph API.
+            </p>
+            
+            <!-- Checklist ticks -->
+            <div style="text-align: left; background: rgba(7, 9, 19, 0.5); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 1.5rem; font-size: 0.8rem; display: flex; flex-direction: column; gap: 0.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--neon-green);">
+                    <span style="font-weight: bold;">✓</span>
+                    <span>Access Token Handshake: OK</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--neon-green);">
+                    <span style="font-weight: bold;">✓</span>
+                    <span>Graph sendMail Payload: Dispatched</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--neon-green);" id="success-checklist-status">
+                    <span style="font-weight: bold;">✓</span>
+                    <span>Triage Status Level: Action Pending</span>
+                </div>
+            </div>
+
+            <button class="btn btn-secondary" style="width: 100%; justify-content: center; border-color: var(--neon-green); color: var(--neon-green); box-shadow: 0 0 10px rgba(52, 199, 89, 0.1);" onclick="closeSuccessModal()">
+                Acknowledge & Close
+            </button>
+        </div>
+    </div>
+
+    <!-- Confetti Particle Container -->
+    <div id="confetti-container" style="position:fixed; top:0; left:0; width:100vw; height:100vh; pointer-events:none; z-index:9999; overflow:hidden;"></div>
+
     <!-- Scripts reference -->
     <script src="app.js"></script>
 </body>

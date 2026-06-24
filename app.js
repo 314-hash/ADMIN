@@ -533,6 +533,62 @@ function closeKbArticle() {
     }
 }
 
+// Dismiss welcome onboarding modal
+function closeWelcomeModal() {
+    const modal = document.getElementById('welcome-modal');
+    if (!modal) return;
+    modal.classList.add('hiding');
+    setTimeout(() => {
+        modal.style.display = 'none';
+        modal.classList.remove('hiding');
+    }, 250);
+}
+
+// Dismiss success feedback modal
+function closeSuccessModal() {
+    const modal = document.getElementById('dispatch-success-modal');
+    if (!modal) return;
+    modal.classList.add('hiding');
+    setTimeout(() => {
+        modal.style.display = 'none';
+        modal.classList.remove('hiding');
+    }, 250);
+}
+
+// Spawns 80 falling particle nodes with randomized offsets, sizes, colors, and wind speeds
+function triggerConfetti() {
+    const container = document.getElementById('confetti-container');
+    if (!container) return;
+    
+    const colors = ['var(--neon-cyan)', 'var(--neon-blue)', 'var(--neon-purple)', 'var(--neon-green)', 'var(--neon-orange)', 'var(--neon-yellow)'];
+    
+    for (let i = 0; i < 80; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'confetti-particle';
+        
+        const startX = Math.random() * 100;
+        const drift = (Math.random() - 0.5) * 300;
+        const duration = 2.0 + Math.random() * 2.0;
+        const delay = Math.random() * 1.2;
+        const size = 6 + Math.random() * 8;
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        
+        particle.style.left = `${startX}vw`;
+        particle.style.width = `${size}px`;
+        particle.style.height = `${size}px`;
+        particle.style.backgroundColor = color;
+        particle.style.setProperty('--drift', `${drift}px`);
+        particle.style.animationDuration = `${duration}s`;
+        particle.style.animationDelay = `${delay}s`;
+        
+        container.appendChild(particle);
+        
+        setTimeout(() => {
+            particle.remove();
+        }, (duration + delay) * 1000);
+    }
+}
+
 // Simulate sending Outlook reply through MS Graph API
 function simulateSendReply() {
     const email = emails.find(e => e.id === selectedEmailId);
@@ -545,6 +601,23 @@ function simulateSendReply() {
     showToast('Sending through MS Graph sendMail API...');
     
     setTimeout(() => {
+        // Trigger surprise confetti particles burst!
+        triggerConfetti();
+        
+        // Display beautiful dispatch success modal
+        const successModal = document.getElementById('dispatch-success-modal');
+        if (successModal) {
+            document.getElementById('success-modal-message').textContent = `Vendor response successfully sent to ${email.sender} via Microsoft Graph sendMail payload.`;
+            
+            const nextStatus = (email.status === 'inbox' || email.status === 'in_review') ? 'Action Pending' : email.status.replace('_', ' ');
+            document.getElementById('success-checklist-status').innerHTML = `
+                <span style="font-weight: bold; color: var(--neon-green);">✓</span>
+                <span>Triage Status Level: ${nextStatus}</span>
+            `;
+            
+            successModal.style.display = 'flex';
+        }
+        
         showToast('Email successfully sent to supplier mailbox!');
         
         // Transition status to awaiting response
