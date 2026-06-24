@@ -144,9 +144,13 @@ let selectedEmailId = null;
 
 // Page Initializer
 window.addEventListener('DOMContentLoaded', () => {
-    renderEmailList();
-    renderKbList();
-    updateDashboardMetrics();
+    // Check if redirect callback from Microsoft
+    checkM365Callback().then(() => {
+        renderEmailList();
+        renderKbList();
+        updateDashboardMetrics();
+        initializeM365UI();
+    });
 });
 
 // Render Email Cards in Left Pane
@@ -589,42 +593,95 @@ function triggerConfetti() {
     }
 }
 
-// Simulate sending Outlook reply through MS Graph API
-function simulateSendReply() {
+// Simulate or send Outlook reply through MS Graph API
+async function simulateSendReply() {
     const email = emails.find(e => e.id === selectedEmailId);
     if (!email) return;
     
     const draftText = document.getElementById('reply-body-field').value;
     email.draftReply = draftText;
     
-    // Trigger sending loading overlay / status updates
-    showToast('Sending through MS Graph sendMail API...');
+    const token = localStorage.getItem('m365_access_token');
     
-    setTimeout(() => {
-        // Trigger surprise confetti particles burst!
-        triggerConfetti();
+    if (token) {
+        showToast('Sending via Microsoft Graph SendMail API...');
         
-        // Display beautiful dispatch success modal
-        const successModal = document.getElementById('dispatch-success-modal');
-        if (successModal) {
-            document.getElementById('success-modal-message').textContent = `Vendor response successfully sent to ${email.sender} via Microsoft Graph sendMail payload.`;
-            
-            const nextStatus = (email.status === 'inbox' || email.status === 'in_review') ? 'Action Pending' : email.status.replace('_', ' ');
-            document.getElementById('success-checklist-status').innerHTML = `
-                <span style="font-weight: bold; color: var(--neon-green);">✓</span>
-                <span>Triage Status Level: ${nextStatus}</span>
-            `;
-            
-            successModal.style.display = 'flex';
+        const payload = {
+            message: {
+                subject: `RE: ${email.subject}`,
+                body: {
+                    contentType: 'Text',
+                    content: draftText
+                },
+                toRecipients: [
+                    {
+                        emailAddress: {
+                            address: email.sender
+                        }
+                    }
+                ]
+            }
+        };
+
+        try {
+            const response = await fetch('https://graph.microsoft.com/v1.0/me/sendMail', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (response.ok) {
+                triggerConfetti();
+                displaySuccessModal(email);
+                showToast('Email successfully sent via M365 Outlook!');
+                if (email.status === 'inbox' || email.status === 'in_review') {
+                    handleStatusChange('action_pending');
+                }
+            } else {
+                const errData = await response.json();
+                showToast('M365 Send Failed: ' + (errData.error.message || response.statusText));
+            }
+        } catch(e) {
+            console.error(e);
+            showToast('M365 Send Failure: Check internet connection.');
         }
+    } else {
+        // Simulator Fallback
+        showToast('Sending through MS Graph sendMail API (Simulator)...');
         
-        showToast('Email successfully sent to supplier mailbox!');
+        setTimeout(() => {
+            // Trigger surprise confetti particles burst!
+            triggerConfetti();
+            
+            // Display beautiful dispatch success modal
+            displaySuccessModal(email);
+            
+            showToast('Email successfully sent to supplier mailbox!');
+            
+            // Transition status to awaiting response
+            if (email.status === 'inbox' || email.status === 'in_review') {
+                handleStatusChange('action_pending');
+            }
+        }, 1200);
+    }
+}
+
+function displaySuccessModal(email) {
+    const successModal = document.getElementById('dispatch-success-modal');
+    if (successModal) {
+        document.getElementById('success-modal-message').textContent = `Vendor response successfully sent to ${email.sender} via Microsoft Graph sendMail payload.`;
         
-        // Transition status to awaiting response
-        if (email.status === 'inbox' || email.status === 'in_review') {
-            handleStatusChange('action_pending');
-        }
-    }, 1200);
+        const nextStatus = (email.status === 'inbox' || email.status === 'in_review') ? 'Action Pending' : email.status.replace('_', ' ');
+        document.getElementById('success-checklist-status').innerHTML = `
+            <span style="font-weight: bold; color: var(--neon-green);">✓</span>
+            <span>Triage Status Level: ${nextStatus}</span>
+        `;
+        
+        successModal.style.display = 'flex';
+    }
 }
 
 // Toast alerts helper
@@ -760,10 +817,16 @@ function updateDashboardMetrics() {
     let transitCount = activeEmails.filter(e => e.category === 'Transportation Disruption' || e.category === 'Customs Delay').length;
     let complianceCount = activeEmails.filter(e => e.category === 'Compliance Risk').length;
     
-    document.getElementById('risk-supplier').querySelector('.risk-value').textContent = supplierCount;
-    document.getElementById('risk-inventory').querySelector('.risk-value').textContent = inventoryCount;
-    document.getElementById('risk-transport').querySelector('.risk-value').textContent = transitCount;
-    document.getElementById('risk-compliance').querySelector('.risk-value').textContent = complianceCount;
+    // Safety checks for M365 UI updates
+    const supplierElem = document.getElementById('risk-supplier');
+    const inventoryElem = document.getElementById('risk-inventory');
+    const transportElem = document.getElementById('risk-transport');
+    const complianceElem = document.getElementById('risk-compliance');
+
+    if (supplierElem) supplierElem.querySelector('.risk-value').textContent = supplierCount;
+    if (inventoryElem) inventoryElem.querySelector('.risk-value').textContent = inventoryCount;
+    if (transportElem) transportElem.querySelector('.risk-value').textContent = transitCount;
+    if (complianceElem) complianceElem.querySelector('.risk-value').textContent = complianceCount;
     
     // Adjust glowing alerts
     adjustRiskIndicatorClass('risk-supplier', supplierCount);
@@ -819,3 +882,382 @@ function filterKb() {
         item.style.display = isMatch ? 'block' : 'none';
     });
 }
+
+// ==========================================
+// MICROSOFT 365 OAUTH 2.0 PKCE & GRAPH API
+// ==========================================
+
+// PKCE Cryptographic string generators
+function dec2hex(dec) {
+    return ('0' + dec.toString(16)).slice(-2);
+}
+
+function generateCodeVerifier() {
+    const array = new Uint32Array(56 / 2);
+    window.crypto.getRandomValues(array);
+    return Array.from(array, dec2hex).join('');
+}
+
+function sha256(plain) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(plain);
+    return window.crypto.subtle.digest('SHA-256', data);
+}
+
+function base64urlencode(a) {
+    let str = "";
+    const bytes = new Uint8Array(a);
+    const len = bytes.byteLength;
+    for (let i = 0; i < len; i++) {
+        str += String.fromCharCode(bytes[i]);
+    }
+    return btoa(str)
+        .replace(/\+/g, "-")
+        .replace(/\//g, "_")
+        .replace(/=/g, "");
+}
+
+async function generateCodeChallenge(v) {
+    const hashed = await sha256(v);
+    return base64urlencode(hashed);
+}
+
+// Restore UI Settings inputs from localStorage
+function initializeM365UI() {
+    const clientId = localStorage.getItem('m365_client_id');
+    const tenantId = localStorage.getItem('m365_tenant_id') || 'common';
+    const token = localStorage.getItem('m365_access_token');
+    
+    const clientIdInput = document.getElementById('m365-client-id');
+    const tenantIdInput = document.getElementById('m365-tenant-id');
+
+    if (clientIdInput && clientId) clientIdInput.value = clientId;
+    if (tenantIdInput) tenantIdInput.value = tenantId;
+
+    updateM365UIState(token);
+}
+
+function updateM365UIState(token) {
+    const badge = document.getElementById('m365-status-badge');
+    const configForm = document.getElementById('m365-config-form');
+    const connectedControls = document.getElementById('m365-connected-controls');
+    const usernameElem = document.getElementById('m365-username');
+    
+    if (!badge || !configForm || !connectedControls) return;
+
+    if (token) {
+        badge.textContent = "Connected";
+        badge.className = "status-pill status-resolved";
+        badge.style.background = "rgba(52, 199, 89, 0.15)";
+        badge.style.color = "var(--neon-green)";
+        badge.style.borderColor = "rgba(52, 199, 89, 0.2)";
+        
+        configForm.style.display = 'none';
+        connectedControls.style.display = 'flex';
+        
+        const cachedUser = localStorage.getItem('m365_user_principal') || 'Outlook User';
+        if (usernameElem) usernameElem.textContent = cachedUser;
+    } else {
+        badge.textContent = "Disconnected";
+        badge.className = "status-pill status-inbox";
+        badge.style.background = "rgba(255, 59, 48, 0.1)";
+        badge.style.color = "var(--neon-red)";
+        badge.style.borderColor = "rgba(255, 59, 48, 0.2)";
+        
+        configForm.style.display = 'flex';
+        connectedControls.style.display = 'none';
+    }
+}
+
+// Redirect client to Microsoft OAuth Auth endpoint
+async function connectM365() {
+    const clientIdInput = document.getElementById('m365-client-id');
+    const tenantIdInput = document.getElementById('m365-tenant-id');
+
+    if (!clientIdInput) return;
+
+    const clientId = clientIdInput.value.trim();
+    const tenantId = tenantIdInput ? tenantIdInput.value.trim() || 'common' : 'common';
+    
+    if (!clientId) {
+        showToast('Error: Client Application ID is required.');
+        return;
+    }
+
+    localStorage.setItem('m365_client_id', clientId);
+    localStorage.setItem('m365_tenant_id', tenantId);
+
+    const verifier = generateCodeVerifier();
+    sessionStorage.setItem('m365_code_verifier', verifier);
+    
+    const challenge = await generateCodeChallenge(verifier);
+    const redirectUri = window.location.origin + window.location.pathname;
+
+    const authUrl = `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/authorize` +
+        `?client_id=${clientId}` +
+        `&response_type=code` +
+        `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+        `&response_mode=query` +
+        `&scope=${encodeURIComponent('User.Read Mail.Read Mail.Send offline_access')}` +
+        `&code_challenge=${challenge}` +
+        `&code_challenge_method=S256`;
+
+    showToast('Redirecting to Microsoft 365 Login...');
+    setTimeout(() => {
+        window.location.href = authUrl;
+    }, 1000);
+}
+
+// Clear cached OAuth token credentials
+function disconnectM365() {
+    localStorage.removeItem('m365_access_token');
+    localStorage.removeItem('m365_refresh_token');
+    localStorage.removeItem('m365_user_principal');
+    
+    updateM365UIState(null);
+    showToast('Microsoft 365 connection closed.');
+}
+
+// Callback verification handler
+async function checkM365Callback() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+    
+    if (!code) return Promise.resolve();
+    
+    const clientId = localStorage.getItem('m365_client_id');
+    const tenantId = localStorage.getItem('m365_tenant_id') || 'common';
+    const verifier = sessionStorage.getItem('m365_code_verifier');
+    
+    if (!clientId || !verifier) {
+        showToast('Callback Error: Missing Client ID or crypt verifier.');
+        return Promise.resolve();
+    }
+    
+    showToast('Exchanging code for credentials...');
+    
+    const redirectUri = window.location.origin + window.location.pathname;
+    const bodyParams = new URLSearchParams({
+        client_id: clientId,
+        scope: 'User.Read Mail.Read Mail.Send offline_access',
+        code: code,
+        redirect_uri: redirectUri,
+        grant_type: 'authorization_code',
+        code_verifier: verifier
+    });
+
+    try {
+        const response = await fetch(`https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: bodyParams.toString()
+        });
+
+        const data = await response.json();
+        
+        if (data.access_token) {
+            localStorage.setItem('m365_access_token', data.access_token);
+            if (data.refresh_token) {
+                localStorage.setItem('m365_refresh_token', data.refresh_token);
+            }
+            
+            // Clear code URL variables
+            const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+            window.history.replaceState({path: cleanUrl}, '', cleanUrl);
+            
+            await fetchUserProfile(data.access_token);
+            showToast('Connected to Microsoft 365 Outlook Feed!');
+        } else {
+            console.error('Token Exchange Error:', data);
+            showToast('Token Handshake failed: ' + (data.error_description || 'Unknown error'));
+        }
+    } catch (err) {
+        console.error(err);
+        showToast('CORS/Network error during token exchange.');
+    }
+    
+    return Promise.resolve();
+}
+
+async function fetchUserProfile(token) {
+    try {
+        const response = await fetch('https://graph.microsoft.com/v1.0/me', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (response.ok) {
+            const data = await response.json();
+            localStorage.setItem('m365_user_principal', data.userPrincipalName);
+        }
+    } catch(e) {
+        console.error(e);
+    }
+}
+
+// Sync live emails from Microsoft Graph API
+async function syncM365Inbox() {
+    const token = localStorage.getItem('m365_access_token');
+    if (!token) {
+        showToast('Please login to Microsoft 365 first.');
+        return;
+    }
+    
+    showToast('Fetching latest Outlook messages...');
+    
+    try {
+        const response = await fetch('https://graph.microsoft.com/v1.0/me/messages?$top=5&$select=id,sender,subject,bodyPreview,body,receivedDateTime', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (!response.ok) {
+            const errData = await response.json();
+            if (errData.error && errData.error.code === 'InvalidAuthenticationToken') {
+                showToast('Authentication Expired. Refreshing token...');
+                const refreshed = await refreshM365Token();
+                if (refreshed) {
+                    syncM365Inbox();
+                } else {
+                    disconnectM365();
+                }
+            } else {
+                showToast('Sync Failed: ' + (errData.error.message || response.statusText));
+            }
+            return;
+        }
+
+        const data = await response.json();
+        const messages = data.value;
+        
+        if (!messages || messages.length === 0) {
+            showToast('Inbox is clean. No new messages found.');
+            return;
+        }
+
+        let syncedCount = 0;
+
+        messages.forEach(msg => {
+            if (!msg.sender || !msg.sender.emailAddress) return;
+
+            const senderEmail = msg.sender.emailAddress.address;
+            const subjectText = msg.subject || 'No Subject';
+            const bodyText = msg.bodyPreview || msg.body.content || 'No Content';
+            
+            const alreadyExists = emails.some(e => e.id === `m365-${msg.id}`);
+            if (alreadyExists) return;
+
+            // Simple NLP parser for real emails
+            const lowercaseText = (subjectText + ' ' + bodyText).toLowerCase();
+            
+            let category = 'Logistics Incident';
+            let priority = 'medium';
+            let urgencyScore = 60;
+            let rootCause = 'Unspecified logistical trigger.';
+            let businessImpact = 'Checking safety buffer status.';
+            
+            if (lowercaseText.includes('customs') || lowercaseText.includes('border') || lowercaseText.includes('declaration')) {
+                category = 'Customs Delay';
+                rootCause = 'Customs hold or paperwork verification at import terminals.';
+            } else if (lowercaseText.includes('shortage') || lowercaseText.includes('inventory') || lowercaseText.includes('out of stock')) {
+                category = 'Inventory Shortage';
+                rootCause = 'Component supply deficit or vendor raw materials lack.';
+            } else if (lowercaseText.includes('delay') || lowercaseText.includes('port') || lowercaseText.includes('transit')) {
+                category = 'Transportation Disruption';
+                rootCause = 'Port congestion, routing bottlenecks, or shipping delays.';
+            } else if (lowercaseText.includes('compliance') || lowercaseText.includes('regulatory') || lowercaseText.includes('reach')) {
+                category = 'Compliance Risk';
+                rootCause = 'Missing compliance declaration or failed regulatory audits.';
+            }
+            
+            if (lowercaseText.includes('critical') || lowercaseText.includes('shutdown') || lowercaseText.includes('halt') || lowercaseText.includes('fine')) {
+                priority = 'critical';
+                urgencyScore = 94;
+                businessImpact = 'Immediate high-risk assembly line shutdown. Material shortages.';
+            } else if (lowercaseText.includes('urgent') || lowercaseText.includes('delay') || lowercaseText.includes('escalate')) {
+                priority = 'high';
+                urgencyScore = 78;
+                businessImpact = 'Delivery timeline delay. Customer ETA disruption.';
+            }
+
+            const formatTime = new Date(msg.receivedDateTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
+            const actions = [
+                { text: `Contact sender at ${senderEmail} to establish recovery timelines.`, checked: false },
+                { text: 'Review component stock levels in ERP dashboard.', checked: false },
+                { text: 'Log ETA parameters in track-and-trace registry.', checked: false }
+            ];
+
+            const tasks = [
+                { title: `Investigate exception: ${subjectText.substring(0, 30)}`, owner: 'Procurement', priority: priority.toUpperCase(), dueDate: '2026-06-26' }
+            ];
+
+            const draftReply = `Dear Vendor Team,\n\nWe are processing your email exception regarding: "${subjectText}".\n\nOur administrative offices are checking the safety stock levels. Please provide exact recovery dates and tracing references.\n\nRegards,\nSignalOps Operations Command`;
+
+            const m365Email = {
+                id: `m365-${msg.id}`,
+                sender: senderEmail,
+                subject: subjectText,
+                body: bodyText,
+                category: category,
+                priority: priority,
+                urgencyScore: urgencyScore,
+                rootCause: rootCause,
+                businessImpact: businessImpact,
+                status: 'inbox',
+                time: formatTime,
+                actions: actions,
+                tasks: tasks,
+                draftReply: draftReply
+            };
+
+            emails.unshift(m365Email);
+            syncedCount++;
+        });
+
+        renderEmailList();
+        updateDashboardMetrics();
+        showToast(`Sync Completed: Synced ${syncedCount} new messages.`);
+
+        if (syncedCount > 0 && emails[0].id.startsWith('m365-')) {
+            selectEmail(emails[0].id);
+        }
+    } catch(err) {
+        console.error(err);
+        showToast('Sync Failed: Check network connectivity.');
+    }
+}
+
+// Token refresh procedure
+async function refreshM365Token() {
+    const refreshToken = localStorage.getItem('m365_refresh_token');
+    const clientId = localStorage.getItem('m365_client_id');
+    const tenantId = localStorage.getItem('m365_tenant_id') || 'common';
+    
+    if (!refreshToken || !clientId) return false;
+
+    try {
+        const response = await fetch(`https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+                client_id: clientId,
+                grant_type: 'refresh_token',
+                refresh_token: refreshToken,
+                scope: 'User.Read Mail.Read Mail.Send offline_access'
+            })
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            localStorage.setItem('m365_access_token', data.access_token);
+            if (data.refresh_token) {
+                localStorage.setItem('m365_refresh_token', data.refresh_token);
+            }
+            return true;
+        }
+    } catch(e) {
+        console.error(e);
+    }
+    return false;
+}
+

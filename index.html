@@ -85,6 +85,41 @@
                             <div class="risk-label">Compliance Risks</div>
                         </div>
                     </div>
+            <!-- Microsoft 365 Integration Panel -->
+            <div class="glass-panel" id="m365-setup-card" style="padding: 1rem; margin-top: 0.25rem;">
+                <div class="sidebar-widget" style="padding: 0;">
+                    <div class="widget-title" style="margin-bottom: 0.5rem; border: none; padding: 0;">
+                        <span>M365 Integration</span>
+                        <span id="m365-status-badge" class="status-pill status-inbox" style="background: rgba(255, 59, 48, 0.1); color: var(--neon-red); border-color: rgba(255, 59, 48, 0.2); font-size: 0.6rem;">Disconnected</span>
+                    </div>
+                    
+                    <!-- Config inputs (visible when disconnected) -->
+                    <div id="m365-config-form" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                        <div>
+                            <input type="text" id="m365-client-id" class="kb-search-input" style="font-size: 0.75rem; padding: 0.35rem 0.5rem;" placeholder="Client ID (Application ID)">
+                        </div>
+                        <div>
+                            <input type="text" id="m365-tenant-id" class="kb-search-input" style="font-size: 0.75rem; padding: 0.35rem 0.5rem;" placeholder="Tenant (default: common)">
+                        </div>
+                        <button class="btn btn-primary" style="width: 100%; padding: 0.4rem; font-size: 0.75rem; justify-content: center; background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple)); border: none; box-shadow: 0 0 10px rgba(79, 172, 254, 0.2);" onclick="connectM365()">
+                            Connect Outlook
+                        </button>
+                    </div>
+
+                    <!-- Connected actions (visible when logged in) -->
+                    <div id="m365-connected-controls" style="display: none; flex-direction: column; gap: 0.5rem;">
+                        <div style="font-size: 0.75rem; color: var(--text-secondary); line-height: 1.4; word-break: break-all;">
+                            User: <strong id="m365-username" style="color: var(--neon-green);">user@company.com</strong>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button class="btn btn-primary" style="flex: 1; padding: 0.4rem; font-size: 0.75rem; justify-content: center;" onclick="syncM365Inbox()">
+                                Sync Inbox
+                            </button>
+                            <button class="btn btn-secondary" style="padding: 0.4rem; font-size: 0.75rem; justify-content: center;" onclick="disconnectM365()">
+                                Sign Out
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
