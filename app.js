@@ -928,11 +928,17 @@ function initializeM365UI() {
     const tenantId = localStorage.getItem('m365_tenant_id') || 'common';
     const token = localStorage.getItem('m365_access_token');
     
+    // Config panel inside main dashboard
     const clientIdInput = document.getElementById('m365-client-id');
     const tenantIdInput = document.getElementById('m365-tenant-id');
-
     if (clientIdInput && clientId) clientIdInput.value = clientId;
     if (tenantIdInput) tenantIdInput.value = tenantId;
+
+    // Config panel inside full-screen splash login gate
+    const splashClientId = document.getElementById('splash-client-id');
+    const splashTenantId = document.getElementById('splash-tenant-id');
+    if (splashClientId && clientId) splashClientId.value = clientId;
+    if (splashTenantId) splashTenantId.value = tenantId;
 
     updateM365UIState(token);
 }
@@ -942,42 +948,64 @@ function updateM365UIState(token) {
     const configForm = document.getElementById('m365-config-form');
     const connectedControls = document.getElementById('m365-connected-controls');
     const usernameElem = document.getElementById('m365-username');
+    const splashScreen = document.getElementById('signin-splash-screen');
     
-    if (!badge || !configForm || !connectedControls) return;
-
     if (token) {
-        badge.textContent = "Connected";
-        badge.className = "status-pill status-resolved";
-        badge.style.background = "rgba(52, 199, 89, 0.15)";
-        badge.style.color = "var(--neon-green)";
-        badge.style.borderColor = "rgba(52, 199, 89, 0.2)";
+        if (badge) {
+            badge.textContent = "Connected";
+            badge.className = "status-pill status-resolved";
+            badge.style.background = "rgba(52, 199, 89, 0.15)";
+            badge.style.color = "var(--neon-green)";
+            badge.style.borderColor = "rgba(52, 199, 89, 0.2)";
+        }
         
-        configForm.style.display = 'none';
-        connectedControls.style.display = 'flex';
+        if (configForm) configForm.style.display = 'none';
+        if (connectedControls) connectedControls.style.display = 'flex';
         
         const cachedUser = localStorage.getItem('m365_user_principal') || 'Outlook User';
         if (usernameElem) usernameElem.textContent = cachedUser;
+
+        // Hide full-screen login splash if connected
+        if (splashScreen) splashScreen.style.display = 'none';
     } else {
-        badge.textContent = "Disconnected";
-        badge.className = "status-pill status-inbox";
-        badge.style.background = "rgba(255, 59, 48, 0.1)";
-        badge.style.color = "var(--neon-red)";
-        badge.style.borderColor = "rgba(255, 59, 48, 0.2)";
+        if (badge) {
+            badge.textContent = "Disconnected";
+            badge.className = "status-pill status-inbox";
+            badge.style.background = "rgba(255, 59, 48, 0.1)";
+            badge.style.color = "var(--neon-red)";
+            badge.style.borderColor = "rgba(255, 59, 48, 0.2)";
+        }
         
-        configForm.style.display = 'flex';
-        connectedControls.style.display = 'none';
+        if (configForm) configForm.style.display = 'flex';
+        if (connectedControls) connectedControls.style.display = 'none';
+
+        // Show full-screen login splash if disconnected and not in simulator mode
+        const isSimulatorMode = sessionStorage.getItem('offline_simulator_mode') === 'true';
+        if (splashScreen) {
+            splashScreen.style.display = isSimulatorMode ? 'none' : 'flex';
+        }
     }
 }
 
-// Redirect client to Microsoft OAuth Auth endpoint
+// Redirect client to Microsoft OAuth Auth endpoint from main panel
 async function connectM365() {
     const clientIdInput = document.getElementById('m365-client-id');
     const tenantIdInput = document.getElementById('m365-tenant-id');
-
     if (!clientIdInput) return;
+    await triggerM365Auth(clientIdInput.value.trim(), tenantIdInput ? tenantIdInput.value.trim() : 'common');
+}
 
-    const clientId = clientIdInput.value.trim();
-    const tenantId = tenantIdInput ? tenantIdInput.value.trim() || 'common' : 'common';
+// Redirect client to Microsoft OAuth Auth endpoint from Splash Page
+async function connectSplashM365() {
+    const clientIdInput = document.getElementById('splash-client-id');
+    const tenantIdInput = document.getElementById('splash-tenant-id');
+    if (!clientIdInput) return;
+    await triggerM365Auth(clientIdInput.value.trim(), tenantIdInput ? tenantIdInput.value.trim() : 'common');
+}
+
+// Shared auth redirection logic
+async function triggerM365Auth(clientId, tenantId) {
+    tenantId = tenantId || 'common';
     
     if (!clientId) {
         showToast('Error: Client Application ID is required.');
@@ -1008,13 +1036,33 @@ async function connectM365() {
     }, 1000);
 }
 
+// Enter Simulator Sandbox directly without logging in (Bypass M365 Auth)
+function enterSimulatorMode() {
+    sessionStorage.setItem('offline_simulator_mode', 'true');
+    const splashScreen = document.getElementById('signin-splash-screen');
+    if (splashScreen) {
+        splashScreen.classList.add('hiding');
+        setTimeout(() => {
+            splashScreen.style.display = 'none';
+            splashScreen.classList.remove('hiding');
+            showToast('Offline Simulator Sandbox Loaded.');
+        }, 250);
+    }
+}
+
 // Clear cached OAuth token credentials
 function disconnectM365() {
     localStorage.removeItem('m365_access_token');
     localStorage.removeItem('m365_refresh_token');
     localStorage.removeItem('m365_user_principal');
+    sessionStorage.removeItem('offline_simulator_mode');
     
     updateM365UIState(null);
+    
+    // Force show login splash screen
+    const splashScreen = document.getElementById('signin-splash-screen');
+    if (splashScreen) splashScreen.style.display = 'flex';
+    
     showToast('Microsoft 365 connection closed.');
 }
 

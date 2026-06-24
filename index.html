@@ -377,36 +377,49 @@
         <span id="toast-message">Task updated successfully</span>
     </div>
 
-    <!-- Welcome Greeting Modal Overlay -->
-    <div class="modal-overlay" id="welcome-modal" style="display: flex;">
-        <div class="glass-panel modal-content" style="width: 520px; text-align: center; padding: 2rem; border-color: var(--neon-cyan); box-shadow: var(--glow-cyan);">
-            <div class="brand-logo" style="width: 60px; height: 60px; font-size: 1.5rem; border-radius: 12px; margin: 0 auto 1.25rem;">SO</div>
-            <h2 style="font-family: 'Outfit', sans-serif; font-size: 1.6rem; margin-bottom: 0.5rem; background: linear-gradient(135deg, #fff, var(--neon-cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">SignalOps AI Active Command Cockpit</h2>
-            <p style="color: var(--text-secondary); font-size: 0.875rem; line-height: 1.6; margin-bottom: 1.5rem;">
-                Supply Chain Operations AI Triage Console initialized.<br>
-                Microsoft 365 Outlook connection and Microsoft Graph API hooks are active.
-            </p>
-            <div class="risk-grid" style="margin-bottom: 1.5rem;">
-                <div class="risk-item" style="padding: 0.5rem;">
-                    <div style="font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase;">Outlook Feed</div>
-                    <div style="color: var(--neon-green); font-weight: bold; font-size: 0.85rem;">CONNECTED</div>
+    <!-- Dedicated Outlook Login Splash Gate -->
+    <div class="modal-overlay" id="signin-splash-screen" style="display: flex; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--bg-main); background-image: radial-gradient(at 50% 50%, rgba(20, 30, 82, 0.4) 0px, transparent 100%); z-index: 9999; align-items: center; justify-content: center;">
+        <div class="glass-panel modal-content" style="width: 480px; padding: 2.5rem; text-align: center; border-color: var(--border-color); box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+            <!-- Icon/Logo -->
+            <div class="brand-logo" style="width: 64px; height: 64px; font-size: 1.6rem; border-radius: 12px; margin: 0 auto 1.5rem; box-shadow: var(--glow-cyan); background: linear-gradient(135deg, var(--neon-cyan), var(--neon-blue)); color: #070913;">SO</div>
+            
+            <h2 style="font-family: 'Outfit', sans-serif; font-size: 1.75rem; margin-bottom: 0.25rem; font-weight: 700; color: var(--text-primary);">SignalOps Command Center</h2>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.75rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">Supply Chain AI Triage Engine</p>
+            
+            <!-- Credentials section -->
+            <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.5rem; text-align: left;">
+                <div>
+                    <label class="form-label" style="font-size: 0.65rem; margin-bottom: 0.25rem; color: var(--text-secondary);">Entra App Client (Application) ID</label>
+                    <input type="text" id="splash-client-id" class="form-input" style="font-size: 0.8rem; padding: 0.5rem;" placeholder="Enter Azure AD Client ID">
                 </div>
-                <div class="risk-item" style="padding: 0.5rem;">
-                    <div style="font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase;">Graph API</div>
-                    <div style="color: var(--neon-green); font-weight: bold; font-size: 0.85rem;">AUTHORIZED</div>
-                </div>
-                <div class="risk-item" style="padding: 0.5rem;">
-                    <div style="font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase;">Triage Engine</div>
-                    <div style="color: var(--neon-cyan); font-weight: bold; font-size: 0.85rem;">AI ACTIVE</div>
-                </div>
-                <div class="risk-item" style="padding: 0.5rem;">
-                    <div style="font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase;">Vercel Hook</div>
-                    <div style="color: var(--neon-purple); font-weight: bold; font-size: 0.85rem;">READY</div>
+                <div>
+                    <label class="form-label" style="font-size: 0.65rem; margin-bottom: 0.25rem; color: var(--text-secondary);">Tenant ID</label>
+                    <input type="text" id="splash-tenant-id" class="form-input" style="font-size: 0.8rem; padding: 0.5rem;" placeholder="common">
                 </div>
             </div>
-            <button class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="closeWelcomeModal()">
-                Access Operations Command
-            </button>
+
+            <!-- Login Buttons -->
+            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                <button class="btn btn-primary" style="width: 100%; justify-content: center; background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple)); border: none; padding: 0.75rem; box-shadow: 0 0 15px rgba(79,172,254,0.3);" onclick="connectSplashM365()">
+                    <!-- Microsoft Icon -->
+                    <svg width="18" height="18" viewBox="0 0 23 23" style="margin-right: 0.5rem; display: inline-block; vertical-align: middle;">
+                        <rect x="0" y="0" width="10" height="10" fill="#f25022"/>
+                        <rect x="11" y="0" width="10" height="10" fill="#7fba00"/>
+                        <rect x="0" y="11" width="10" height="10" fill="#00a4ef"/>
+                        <rect x="11" y="11" width="10" height="10" fill="#ffb900"/>
+                    </svg>
+                    Sign In with Microsoft Outlook
+                </button>
+                
+                <button class="btn btn-secondary" style="width: 100%; justify-content: center; padding: 0.75rem;" onclick="enterSimulatorMode()">
+                    Launch Offline Simulator Sandbox
+                </button>
+            </div>
+            
+            <!-- Connection indicator status -->
+            <div style="margin-top: 1.5rem; font-size: 0.75rem; color: var(--text-muted);">
+                System status: <span style="color: var(--neon-green);">● Online</span> | Secure TLS 1.3 Encryption
+            </div>
         </div>
     </div>
 
