@@ -674,16 +674,9 @@ async function simulateSendReply() {
         };
 
         try {
-            const response = await fetch('https://graph.microsoft.com/v1.0/me/sendMail', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(payload)
-            });
-
-            if (response.ok) {
+            const client = getGraphClient();
+            if (client) {
+                await client.api('/me/sendMail').post(payload);
                 triggerConfetti();
                 displaySuccessModal(email);
                 showToast('Email successfully sent via M365 Outlook!');
@@ -691,12 +684,11 @@ async function simulateSendReply() {
                     handleStatusChange('action_pending');
                 }
             } else {
-                const errData = await response.json();
-                showToast('M365 Send Failed: ' + (errData.error.message || response.statusText));
+                throw new Error("Unable to initialize Graph Client.");
             }
         } catch(e) {
             console.error(e);
-            showToast('M365 Send Failure: Check internet connection.');
+            showToast('M365 Send Failure: ' + (e.message || 'Check connection.'));
         }
     } else {
         // Simulator Fallback
@@ -936,6 +928,23 @@ function filterKb() {
 // ==========================================
 // MICROSOFT 365 OAUTH 2.0 PKCE & GRAPH API
 // ==========================================
+
+// Helper to get initialized MS Graph Client
+function getGraphClient() {
+    const token = localStorage.getItem('m365_access_token');
+    if (!token) return null;
+    
+    if (typeof MicrosoftGraph === 'undefined') {
+        console.error("MicrosoftGraph SDK not loaded");
+        return null;
+    }
+    
+    return MicrosoftGraph.Client.init({
+        authProvider: (done) => {
+            done(null, token);
+        }
+    });
+}
 
 // PKCE Cryptographic string generators
 function dec2hex(dec) {
@@ -1202,15 +1211,13 @@ async function checkM365Callback() {
 
 async function fetchUserProfile(token) {
     try {
-        const response = await fetch('https://graph.microsoft.com/v1.0/me', {
-            headers: { 'Authorization': `Bearer ${token}` }
+        const client = MicrosoftGraph.Client.init({
+            authProvider: (done) => done(null, token)
         });
-        if (response.ok) {
-            const data = await response.json();
-            localStorage.setItem('m365_user_principal', data.userPrincipalName);
-        }
+        const data = await client.api('/me').get();
+        localStorage.setItem('m365_user_principal', data.userPrincipalName);
     } catch(e) {
-        console.error(e);
+        console.error('Error fetching user profile:', e);
     }
 }
 
@@ -1225,27 +1232,17 @@ async function syncM365Inbox() {
     showToast('Fetching latest Outlook messages...');
     
     try {
-        const response = await fetch('https://graph.microsoft.com/v1.0/me/messages?$top=5&$select=id,sender,subject,bodyPreview,body,receivedDateTime', {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        
-        if (!response.ok) {
-            const errData = await response.json();
-            if (errData.error && errData.error.code === 'InvalidAuthenticationToken') {
-                showToast('Authentication Expired. Refreshing token...');
-                const refreshed = await refreshM365Token();
-                if (refreshed) {
-                    syncM365Inbox();
-                } else {
-                    disconnectM365();
-                }
-            } else {
-                showToast('Sync Failed: ' + (errData.error.message || response.statusText));
-            }
+        const client = getGraphClient();
+        if (!client) {
+            showToast('Unable to initialize Microsoft Graph client.');
             return;
         }
 
-        const data = await response.json();
+        const data = await client.api('/me/messages')
+            .top(5)
+            .select('id,sender,subject,bodyPreview,body,receivedDateTime')
+            .get();
+
         const messages = data.value;
         
         if (!messages || messages.length === 0) {
@@ -1342,7 +1339,17 @@ async function syncM365Inbox() {
         }
     } catch(err) {
         console.error(err);
-        showToast('Sync Failed: Check network connectivity.');
+        if (err.statusCode === 401 || (err.code && err.code === 'InvalidAuthenticationToken')) {
+            showToast('Authentication Expired. Refreshing token...');
+            const refreshed = await refreshM365Token();
+            if (refreshed) {
+                syncM365Inbox();
+            } else {
+                disconnectM365();
+            }
+        } else {
+            showToast('Sync Failed: ' + (err.message || 'Check network connectivity.'));
+        }
     }
 }
 
@@ -1392,25 +1399,20 @@ async function saveToOneDrive(emailId, attachmentIndex) {
         showToast(`Uploading ${att.name} to OneDrive via Graph API...`);
         
         try {
-            // Put request to upload content to root:/SignalConsole/filename
-            const response = await fetch(`https://graph.microsoft.com/v1.0/me/drive/root:/SignalConsole/${att.name}:/content`, {
-                method: 'PUT',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'text/plain'
-                },
-                body: att.content
-            });
-            
-            if (response.ok) {
-                showToast(`Successfully uploaded ${att.name} to OneDrive folder /SignalConsole/`);
-            } else {
-                const errData = await response.json();
-                showToast('OneDrive Upload Failed: ' + (errData.error.message || response.statusText));
+            const client = getGraphClient();
+            if (!client) {
+                showToast('Unable to initialize Microsoft Graph client.');
+                return;
             }
+
+            await client.api(`/me/drive/root:/SignalConsole/${att.name}:/content`)
+                .header('Content-Type', 'text/plain')
+                .put(att.content);
+                
+            showToast(`Successfully uploaded ${att.name} to OneDrive folder /SignalConsole/`);
         } catch(e) {
             console.error(e);
-            showToast('OneDrive Network Error: Check internet connection.');
+            showToast('OneDrive Upload Failed: ' + (e.message || 'Check network connection.'));
         }
     } else {
         // Simulator fallback
