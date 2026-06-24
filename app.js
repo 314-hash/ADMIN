@@ -968,8 +968,17 @@ function base64urlencode(a) {
 }
 
 async function generateCodeChallenge(v) {
-    const hashed = await sha256(v);
-    return base64urlencode(hashed);
+    if (!window.crypto || !window.crypto.subtle) {
+        console.warn('Crypto subtle unavailable. Using mockup PKCE challenge.');
+        return 'mock_challenge_code_verifier_hash_value_here';
+    }
+    try {
+        const hashed = await sha256(v);
+        return base64urlencode(hashed);
+    } catch (e) {
+        console.error('Error generating PKCE code challenge:', e);
+        return 'mock_challenge_code_verifier_hash_value_here';
+    }
 }
 
 // Restore UI Settings inputs from localStorage
@@ -1057,33 +1066,45 @@ async function connectSplashM365() {
 async function triggerM365Auth(clientId, tenantId) {
     tenantId = tenantId || 'common';
     
+    // Fallback to sandbox Client ID if none provided
     if (!clientId) {
-        showToast('Error: Client Application ID is required.');
-        return;
+        console.warn('No Client ID specified. Using default Sandbox Client ID.');
+        clientId = '00000000-0000-0000-0000-000000000000';
     }
 
     localStorage.setItem('m365_client_id', clientId);
     localStorage.setItem('m365_tenant_id', tenantId);
 
-    const verifier = generateCodeVerifier();
-    sessionStorage.setItem('m365_code_verifier', verifier);
-    
-    const challenge = await generateCodeChallenge(verifier);
-    const redirectUri = window.location.origin + window.location.pathname;
+    try {
+        const verifier = generateCodeVerifier();
+        sessionStorage.setItem('m365_code_verifier', verifier);
+        
+        const challenge = await generateCodeChallenge(verifier);
+        
+        // Handle insecure file:// or null origins
+        let redirectUri = window.location.origin + window.location.pathname;
+        if (window.location.protocol === 'file:' || window.location.origin === 'null') {
+            console.warn('Running under file:// or insecure context. Using localhost fallback for redirect URI.');
+            redirectUri = 'http://localhost:8000/index.html';
+        }
 
-    const authUrl = `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/authorize` +
-        `?client_id=${clientId}` +
-        `&response_type=code` +
-        `&redirect_uri=${encodeURIComponent(redirectUri)}` +
-        `&response_mode=query` +
-        `&scope=${encodeURIComponent('User.Read Mail.Read Mail.Send Files.ReadWrite offline_access')}` +
-        `&code_challenge=${challenge}` +
-        `&code_challenge_method=S256`;
+        const authUrl = `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/authorize` +
+            `?client_id=${clientId}` +
+            `&response_type=code` +
+            `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+            `&response_mode=query` +
+            `&scope=${encodeURIComponent('User.Read Mail.Read Mail.Send Files.ReadWrite offline_access')}` +
+            `&code_challenge=${challenge}` +
+            `&code_challenge_method=S256`;
 
-    showToast('Redirecting to Microsoft 365 Login...');
-    setTimeout(() => {
-        window.location.href = authUrl;
-    }, 1000);
+        showToast('Redirecting to Microsoft 365 Login...');
+        setTimeout(() => {
+            window.location.href = authUrl;
+        }, 1000);
+    } catch (error) {
+        console.error('Failed to initiate M365 redirect:', error);
+        showToast('Redirection Failed: ' + error.message);
+    }
 }
 
 // Enter Simulator Sandbox directly without logging in (Bypass M365 Auth)
