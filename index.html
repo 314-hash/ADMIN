@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signal Console | Supply Chain Operations AI Agent</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <!-- Main Dashboard Header -->
+    <header class="app-header">
+        <div class="brand">
+            <div class="brand-logo">SO</div>
+            <div class="brand-text">Signal Console</div>
+        </div>
+        
+        <div class="system-status">
+            <div class="status-indicator">
+                <span class="status-dot pulsing"></span>
+                <span>AI Pipeline Status: <strong>Operational</strong></span>
+            </div>
+            <div id="live-timer" class="status-indicator" style="font-family: monospace;">
+                2026-06-24 20:38:35
+            </div>
+        </div>
+
+        <div class="header-actions">
+            <button id="btn-simulate" class="btn btn-primary" onclick="openSimulatorModal()">
+                <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="margin-top:-2px;">
+                    <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h-3v-3A.5.5 0 0 1 8 4z"/>
+                </svg>
+                Ingest Custom Email
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Grid Dashboard -->
+    <main class="dashboard-grid">
+
+        <!-- LEFT COLUMN: Inbox & Risk Cockpit -->
+        <section class="dashboard-col">
+            <!-- Inbox list -->
+            <div class="list-panel glass-panel">
+                <div class="sidebar-widget" style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
+                    <div class="widget-title">
+                        <span>Incoming Signals</span>
+                        <span id="inbox-count" class="badge badge-medium">4</span>
+                    </div>
+                    <div style="margin-bottom: 0.75rem;">
+                        <input type="text" id="inbox-search" class="kb-search-input" placeholder="Search signals..." oninput="filterInbox()">
+                    </div>
+                    <div class="list-container" id="email-list-container">
+                        <!-- Populated by app.js -->
+                        <div class="empty-state">
+                            <span class="empty-icon">📥</span>
+                            <p>Loading incoming Outlook inbox...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Risk command center -->
+            <div class="glass-panel" style="height: 180px;">
+                <div class="sidebar-widget">
+                    <div class="widget-title">
+                        <span>Operational Risks</span>
+                        <span class="status-pill status-resolved" style="background: rgba(255, 59, 48, 0.1); color: var(--neon-red); border-color: rgba(255, 59, 48, 0.2);">ACTIVE ALERTS</span>
+                    </div>
+                    <div class="risk-grid">
+                        <div class="risk-item alert-active" id="risk-supplier">
+                            <div class="risk-value" style="color: var(--neon-red);">2</div>
+                            <div class="risk-label">Supplier Risks</div>
+                        </div>
+                        <div class="risk-item alert-warning" id="risk-inventory">
+                            <div class="risk-value" style="color: var(--neon-orange);">1</div>
+                            <div class="risk-label">Inventory Shortages</div>
+                        </div>
+                        <div class="risk-item" id="risk-transport">
+                            <div class="risk-value" style="color: var(--neon-yellow);">1</div>
+                            <div class="risk-label">Transit Delays</div>
+                        </div>
+                        <div class="risk-item" id="risk-compliance">
+                            <div class="risk-value" style="color: var(--neon-green);">0</div>
+                            <div class="risk-label">Compliance Risks</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CENTER COLUMN: Active Workspace and Analysis Operations -->
+        <section class="operations-center dashboard-col">
+            <!-- Pipeline flow tracker -->
+            <div class="pipeline-visualizer">
+                <div class="pipeline-step" id="step-ingest">
+                    <div class="pipeline-node">1</div>
+                    <span>Ingest</span>
+                </div>
+                <div class="pipeline-step" id="step-parse">
+                    <div class="pipeline-node">2</div>
+                    <span>Parse</span>
+                </div>
+                <div class="pipeline-step" id="step-scoring">
+                    <div class="pipeline-node">3</div>
+                    <span>Scoring</span>
+                </div>
+                <div class="pipeline-step" id="step-draft">
+                    <div class="pipeline-node">4</div>
+                    <span>Drafting</span>
+                </div>
+                <div class="pipeline-step" id="step-complete">
+                    <div class="pipeline-node">5</div>
+                    <span>Ready</span>
+                </div>
+                <div class="pipeline-progress-line">
+                    <div class="pipeline-fill" id="pipeline-fill-line"></div>
+                </div>
+            </div>
+
+            <!-- Workspace Scroll Container -->
+            <div class="workspace-scroll">
+                
+                <!-- Welcome/Empty State when no signal selected -->
+                <div class="glass-panel empty-state" id="empty-workspace-state" style="flex: 1;">
+                    <span class="empty-icon" style="font-size: 4rem;">🤖</span>
+                    <h2 style="margin-bottom: 0.5rem; font-size: 1.5rem; color: var(--text-primary);">SignalOps Command Center Ready</h2>
+                    <p style="max-width: 420px; font-size: 0.9rem; line-height: 1.5;">Select an incoming Outlook email from the list on the left to trigger the AI analysis pipeline, score urgency, extract tasks, and draft vendor responses.</p>
+                </div>
+
+                <!-- Active Signal Details (hidden initially) -->
+                <div class="glass-panel" id="workspace-details-card" style="display: none;">
+                    <div class="signal-detail-grid">
+                        <div class="signal-meta-card">
+                            <div class="signal-header-block">
+                                <div>
+                                    <div class="signal-subject" id="disp-subject">Subject line displays here</div>
+                                    <div class="signal-from" id="disp-sender">From: sender@company.com</div>
+                                </div>
+                                <div>
+                                    <span class="badge" id="disp-priority">CRITICAL</span>
+                                </div>
+                            </div>
+                            
+                            <div class="metadata-grid">
+                                <div class="meta-field">
+                                    <div class="meta-label">Category</div>
+                                    <div class="meta-val" id="disp-category">Shipment Delay</div>
+                                </div>
+                                <div class="meta-field">
+                                    <div class="meta-label">Current Status</div>
+                                    <div class="meta-val">
+                                        <select id="disp-status-select" class="form-input" style="padding: 0.15rem 0.4rem; background: transparent; font-size: 0.8rem; border-color: rgba(255,255,255,0.15);" onchange="handleStatusChange(this.value)">
+                                            <option value="inbox">Inbox</option>
+                                            <option value="in_review">In Review</option>
+                                            <option value="action_pending">Action Pending</option>
+                                            <option value="resolved">Resolved</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Urgency score gauge -->
+                        <div class="gauge-card">
+                            <div class="gauge-title">Urgency Score</div>
+                            <div class="gauge-circle">
+                                <svg class="gauge-svg" width="90" height="90">
+                                    <circle class="gauge-track" cx="45" cy="45" r="40"></circle>
+                                    <circle class="gauge-bar" id="urgency-gauge" cx="45" cy="45" r="40"></circle>
+                                </svg>
+                                <span class="gauge-value" id="disp-urgency">94</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Root Cause and Business Impact -->
+                <div class="glass-panel analysis-card" id="workspace-analysis-card" style="display: none;">
+                    <div class="section-subtitle">
+                        <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                            <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 4.995z"/>
+                        </svg>
+                        Root Cause & Impact Analysis
+                    </div>
+                    <div class="analysis-block">
+                        <div class="meta-label">Core Business Impact</div>
+                        <p class="analysis-text" id="disp-business-impact">Description of the financial, revenue, and customer service delivery impacts.</p>
+                    </div>
+                    <div class="analysis-block" style="margin-top: 1rem;">
+                        <div class="meta-label">Root Cause / Factors</div>
+                        <p class="analysis-text" id="disp-root-cause">Description of the physical and logistical root cause contributing factors.</p>
+                    </div>
+                </div>
+
+                <!-- Recommended Actions Checklist -->
+                <div class="glass-panel actions-card" id="workspace-actions-card" style="display: none;">
+                    <div class="section-subtitle" style="color: var(--neon-orange);">
+                        <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M12.736 14H3.264a1 1 0 0 1-.707-.293l-2-2A1 1 0 0 1 .264 11h15.472a1 1 0 0 1-.293.707l-2 2a1 1 0 0 1-.707.293zM16 10H0V6h16v4zM0 5h16V1.5a1.5 1.5 0 0 0-1.5-1.5h-13A1.5 1.5 0 0 0 0 1.5V5z"/>
+                        </svg>
+                        Recommended Operational Actions
+                    </div>
+                    <div class="action-list" id="action-items-container">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Email Draft response composer -->
+                <div class="glass-panel reply-card" id="workspace-reply-card" style="display: none;">
+                    <div class="reply-header">
+                        <div class="section-subtitle" style="color: var(--neon-purple); margin-bottom: 0;">
+                            <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M15.964.686a.5.5 0 0 0-.65-.65L.767 5.855H.766l-.452.18a.5.5 0 0 0-.082.887l.41.26.001.002 4.995 3.178 3.178 4.995.002.002.26.41a.5.5 0 0 0 .886-.083l6-15Zm-1.833 1.89L6.637 10.07l-.215-.338a.5.5 0 0 0-.154-.154l-.338-.215 7.494-7.494 1.178-.471-.47 1.178Z"/>
+                            </svg>
+                            AI Draft Response (Outlook Context)
+                        </div>
+                        <div class="reply-to-info" id="disp-reply-to">To: supplier@company.com</div>
+                    </div>
+                    
+                    <textarea class="reply-body" id="reply-body-field" placeholder="Draft reply text here..."></textarea>
+                    
+                    <div class="reply-footer">
+                        <div class="reply-status-label" id="reply-status-indicator">Approved drafts will send through the MS Graph sendMail API.</div>
+                        <button class="btn btn-primary" onclick="simulateSendReply()" style="background: linear-gradient(135deg, var(--neon-purple), var(--neon-blue)); box-shadow: 0 0 15px rgba(161, 140, 209, 0.3);">
+                            Approve & Send Mail
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Detailed Knowledge base viewer when viewing article -->
+                <div class="glass-panel kb-detail-card" id="kb-detail-viewer" style="display: none;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <div>
+                            <div class="kb-title" id="kb-viewer-title">Problem Title</div>
+                            <div class="kb-meta" id="kb-viewer-meta">Created Date | Departments</div>
+                        </div>
+                        <button class="btn btn-secondary" onclick="closeKbArticle()" style="padding: 0.3rem 0.6rem; font-size: 0.75rem;">
+                            Close Article
+                        </button>
+                    </div>
+                    <div class="kb-detail-block">
+                        <div class="meta-label">Background Context</div>
+                        <p class="analysis-text" id="kb-viewer-background"></p>
+                    </div>
+                    <div class="kb-detail-block">
+                        <div class="meta-label">Root Cause</div>
+                        <p class="analysis-text" id="kb-viewer-cause"></p>
+                    </div>
+                    <div class="kb-detail-block">
+                        <div class="meta-label">Resolution Steps Taken</div>
+                        <p class="analysis-text" id="kb-viewer-resolution"></p>
+                    </div>
+                    <div class="kb-detail-block">
+                        <div class="meta-label">Prevention Measures</div>
+                        <p class="analysis-text" id="kb-viewer-prevention"></p>
+                    </div>
+                    <div class="kb-detail-block">
+                        <div class="meta-label">Related Suppliers</div>
+                        <p class="analysis-text" id="kb-viewer-suppliers"></p>
+                    </div>
+                    <div class="kb-item-tags" id="kb-viewer-tags" style="margin-top: 1rem;"></div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- RIGHT COLUMN: Extracted Operational Tasks & Knowledge Base Articles -->
+        <section class="dashboard-col">
+            <!-- Active Extracted Tasks -->
+            <div class="glass-panel" style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
+                <div class="sidebar-widget" style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
+                    <div class="widget-title">
+                        <span>Extracted Tasks</span>
+                        <span id="tasks-count" class="badge badge-low" style="background: rgba(52, 199, 89, 0.1); color: var(--neon-green); border-color: rgba(52, 199, 89, 0.2);">0 Completed</span>
+                    </div>
+                    <div class="sidebar-tasks" id="tasks-list-container" style="flex: 1;">
+                        <!-- Dynamically filled by JS -->
+                        <div class="empty-state">
+                            <span class="empty-icon" style="font-size: 2rem;">📋</span>
+                            <p>No operational tasks active</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Knowledge Base list -->
+            <div class="glass-panel" style="flex: 1.2; display: flex; flex-direction: column; overflow: hidden;">
+                <div class="sidebar-widget" style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
+                    <div class="widget-title">
+                        <span>Knowledge Articles</span>
+                        <span class="badge badge-low" style="background: rgba(0, 242, 254, 0.1); color: var(--neon-cyan); border-color: rgba(0, 242, 254, 0.2);">DATABASE</span>
+                    </div>
+                    <div class="kb-search-container">
+                        <input type="text" id="kb-search" class="kb-search-input" placeholder="Search knowledge base..." oninput="filterKb()">
+                    </div>
+                    <div class="kb-list" id="kb-articles-container" style="flex: 1;">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Custom Simulator Modal Overlay -->
+    <div class="modal-overlay" id="simulator-modal">
+        <div class="glass-panel modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Simulate Outlook Inbox Ingestion</h3>
+                <button class="close-btn" onclick="closeSimulatorModal()">&times;</button>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="sim-sender">Sender Email</label>
+                <input type="text" id="sim-sender" class="form-input" placeholder="vendor-logistics@globalparts.com">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="sim-subject">Email Subject</label>
+                <input type="text" id="sim-subject" class="form-input" placeholder="URGENT: Port congestion delaying delivery of microprocessors">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="sim-body">Email Body Context</label>
+                <textarea id="sim-body" class="form-textarea" placeholder="Dear Team, due to severe port delays in Los Angeles, shipment #LP-9082 containing 12,000 microprocessors has been delayed by 10 business days. This will delay our assembly line starts. Requesting routing diversion to alternative carrier."></textarea>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+                <button class="btn btn-secondary" onclick="closeSimulatorModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="submitSimulatedEmail()">Trigger Ingestion Webhook</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast Popup -->
+    <div class="notification-toast" id="toast-bar">
+        <svg width="20" height="20" fill="var(--neon-green)" viewBox="0 0 16 16">
+            <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
+        </svg>
+        <span id="toast-message">Task updated successfully</span>
+    </div>
+
+    <!-- Scripts reference -->
+    <script src="app.js"></script>
+</body>
+</html>
