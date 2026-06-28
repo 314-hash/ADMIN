@@ -3,25 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signal Console | Supply Chain Operations AI Agent</title>
+    <title>Signal Console | AI Supply Chain Command Center</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-    <!-- Main Dashboard Header -->
+    <!-- 🌐 Dynamic Motion Graphics Network Canvas Background -->
+    <canvas id="network-canvas"></canvas>
+    
+    <!-- 🎛️ Cybernetic Grid Overlay -->
+    <div class="cyber-grid"></div>
+
+    <!-- 🏷️ Main Dashboard Header -->
     <header class="app-header">
         <div class="brand">
-            <div class="brand-logo">SO</div>
-            <div class="brand-text">Signal Console</div>
+            <!-- Hexagonal S-Logo -->
+            <svg class="hex-logo-svg" width="40" height="40" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <polygon points="50,5 90,28 90,72 50,95 10,72 10,28" stroke="url(#logo-grad)" stroke-width="6" fill="rgba(6, 8, 20, 0.95)" />
+                <!-- Top half of S chevron -->
+                <path d="M28,38 L50,22 L72,38 L72,50 L50,34 L38,43 L28,35 Z" fill="url(#cyan-grad)" />
+                <!-- Bottom half of S chevron -->
+                <path d="M72,62 L50,78 L28,62 L28,50 L50,66 L62,57 L72,65 Z" fill="url(#blue-grad)" />
+                <defs>
+                    <linearGradient id="logo-grad" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stop-color="#00f2fe" />
+                        <stop offset="100%" stop-color="#a18cd1" />
+                    </linearGradient>
+                    <linearGradient id="cyan-grad" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stop-color="#00f2fe" />
+                        <stop offset="100%" stop-color="#4facfe" />
+                    </linearGradient>
+                    <linearGradient id="blue-grad" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stop-color="#4facfe" />
+                        <stop offset="100%" stop-color="#0062ff" />
+                    </linearGradient>
+                </defs>
+            </svg>
+            <div class="brand-text-container">
+                <div class="brand-text">Signal Console</div>
+                <div class="brand-subtitle">AI Supply Chain Command Center</div>
+            </div>
+            <!-- Yellow Ribbon Badge -->
+            <span class="yellow-badge">AI-Driven Email Triage &amp; Workflow Automation</span>
         </div>
         
         <div class="system-status">
             <div class="status-indicator">
                 <span class="status-dot pulsing"></span>
-                <span>AI Pipeline Status: <strong>Operational</strong></span>
+                <span>AI Pipeline: <strong>Active</strong></span>
             </div>
-            <div id="live-timer" class="status-indicator" style="font-family: monospace;">
-                2026-06-24 20:38:35
+            <div id="live-timer" class="status-indicator" style="font-family: monospace; font-weight: 600; color: var(--neon-cyan);">
+                2026-06-28 20:56:04
             </div>
         </div>
 
@@ -39,378 +71,555 @@
                 <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="margin-top:-2px;">
                     <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h-3v-3A.5.5 0 0 1 8 4z"/>
                 </svg>
-                Ingest Custom Email
+                Ingest Email
             </button>
         </div>
     </header>
 
-    <!-- Main Grid Dashboard -->
-    <main class="dashboard-grid">
+    <!-- 📊 Main Presentation Cockpit Layout -->
+    <main class="presentation-grid">
 
-        <!-- LEFT COLUMN: Inbox & Risk Cockpit -->
-        <section class="dashboard-col">
-            <!-- Inbox list -->
-            <div class="list-panel glass-panel">
-                <div class="sidebar-widget" style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
-                    <div class="widget-title">
-                        <span>Incoming Signals</span>
-                        <span id="inbox-count" class="badge badge-medium">4</span>
-                    </div>
-                    <div style="margin-bottom: 0.75rem;">
-                        <input type="text" id="inbox-search" class="kb-search-input" placeholder="Search signals..." oninput="filterInbox()">
-                    </div>
-                    <div class="list-container" id="email-list-container">
-                        <!-- Populated by app.js -->
-                        <div class="empty-state">
-                            <span class="empty-icon">📥</span>
-                            <p>Loading incoming Outlook inbox...</p>
-                        </div>
+        <!-- 🚨 LEFT COLUMN: The Problem Card -->
+        <section class="dashboard-col scroll-reveal" id="reveal-left">
+            <div class="glass-panel problem-panel" style="flex: 1;">
+                <div class="problem-header">
+                    <span>⚠️ The Problem</span>
+                </div>
+                
+                <!-- Triage Bottleneck -->
+                <div class="problem-item">
+                    <div class="problem-icon-wrap">🕒</div>
+                    <div class="problem-detail">
+                        <div class="problem-title">Triage Bottleneck</div>
+                        <div class="problem-desc">Operations teams spend hours reading, manually categorizing, and flagging email exceptions daily.</div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Risk command center -->
-            <div class="glass-panel" style="height: 180px;">
-                <div class="sidebar-widget">
-                    <div class="widget-title">
-                        <span>Operational Risks</span>
-                        <span class="status-pill status-resolved" style="background: rgba(255, 59, 48, 0.1); color: var(--neon-red); border-color: rgba(255, 59, 48, 0.2);">ACTIVE ALERTS</span>
-                    </div>
-                    <div class="risk-grid">
-                        <div class="risk-item alert-active" id="risk-supplier">
-                            <div class="risk-value" style="color: var(--neon-red);">2</div>
-                            <div class="risk-label">Supplier Risks</div>
-                        </div>
-                        <div class="risk-item alert-warning" id="risk-inventory">
-                            <div class="risk-value" style="color: var(--neon-orange);">1</div>
-                            <div class="risk-label">Inventory Shortages</div>
-                        </div>
-                        <div class="risk-item" id="risk-transport">
-                            <div class="risk-value" style="color: var(--neon-yellow);">1</div>
-                            <div class="risk-label">Transit Delays</div>
-                        </div>
-                        <div class="risk-item" id="risk-compliance">
-                            <div class="risk-value" style="color: var(--neon-green);">0</div>
-                            <div class="risk-label">Compliance Risks</div>
-                        </div>
+                <!-- Financial Exposure -->
+                <div class="problem-item">
+                    <div class="problem-icon-wrap">💰</div>
+                    <div class="problem-detail">
+                        <div class="problem-title">Financial Exposure</div>
+                        <div class="problem-desc">Delayed response times cause supplier SLA breaches and factory line shutdowns costing <strong>$100k - $500k+</strong> per incident.</div>
                     </div>
                 </div>
-            </div>
-            <!-- Microsoft 365 Integration Panel -->
-            <div class="glass-panel" id="m365-setup-card" style="padding: 1rem; margin-top: 0.25rem;">
-                <div class="sidebar-widget" style="padding: 0;">
-                    <div class="widget-title" style="margin-bottom: 0.5rem; border: none; padding: 0;">
-                        <span>M365 Integration</span>
-                        <span id="m365-status-badge" class="status-pill status-inbox" style="background: rgba(255, 59, 48, 0.1); color: var(--neon-red); border-color: rgba(255, 59, 48, 0.2); font-size: 0.6rem;">Disconnected</span>
-                    </div>
-                    
-                    <!-- Config inputs (visible when disconnected) -->
-                    <div id="m365-config-form" style="display: flex; flex-direction: column; gap: 0.5rem;">
-                        <div>
-                            <input type="text" id="m365-client-id" class="kb-search-input" style="font-size: 0.75rem; padding: 0.35rem 0.5rem;" placeholder="Client ID (Application ID)">
-                        </div>
-                        <div>
-                            <input type="text" id="m365-tenant-id" class="kb-search-input" style="font-size: 0.75rem; padding: 0.35rem 0.5rem;" placeholder="Tenant (default: common)">
-                        </div>
-                        <button class="btn btn-primary" style="width: 100%; padding: 0.4rem; font-size: 0.75rem; justify-content: center; background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple)); border: none; box-shadow: 0 0 10px rgba(79, 172, 254, 0.2);" onclick="connectM365()">
-                            Connect Outlook
-                        </button>
-                    </div>
 
-                    <!-- Connected actions (visible when logged in) -->
-                    <div id="m365-connected-controls" style="display: none; flex-direction: column; gap: 0.5rem;">
-                        <div style="font-size: 0.75rem; color: var(--text-secondary); line-height: 1.4; word-break: break-all;">
-                            User: <strong id="m365-username" style="color: var(--neon-green);">user@company.com</strong>
-                        </div>
-                        <div style="display: flex; gap: 0.5rem;">
-                            <button class="btn btn-primary" style="flex: 1; padding: 0.4rem; font-size: 0.75rem; justify-content: center;" onclick="syncM365Inbox()">
-                                Sync Inbox
-                            </button>
-                            <button class="btn btn-secondary" style="padding: 0.4rem; font-size: 0.75rem; justify-content: center;" onclick="disconnectM365()">
-                                Sign Out
-                            </button>
-                        </div>
+                <!-- Loss of Knowledge -->
+                <div class="problem-item">
+                    <div class="problem-icon-wrap">📂</div>
+                    <div class="problem-detail">
+                        <div class="problem-title">Loss of Knowledge</div>
+                        <div class="problem-desc">Crucial mitigation workflows stay locked in individual inbox threads. Operational playbooks are rarely captured.</div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- CENTER COLUMN: Active Workspace and Analysis Operations -->
-        <section class="operations-center dashboard-col">
-            <!-- Pipeline flow tracker -->
-            <div class="pipeline-visualizer">
-                <div class="pipeline-step" id="step-ingest">
-                    <div class="pipeline-node">1</div>
-                    <span>Ingest</span>
-                </div>
-                <div class="pipeline-step" id="step-parse">
-                    <div class="pipeline-node">2</div>
-                    <span>Parse</span>
-                </div>
-                <div class="pipeline-step" id="step-scoring">
-                    <div class="pipeline-node">3</div>
-                    <span>Scoring</span>
-                </div>
-                <div class="pipeline-step" id="step-draft">
-                    <div class="pipeline-node">4</div>
-                    <span>Drafting</span>
-                </div>
-                <div class="pipeline-step" id="step-complete">
-                    <div class="pipeline-node">5</div>
-                    <span>Ready</span>
-                </div>
-                <div class="pipeline-progress-line">
-                    <div class="pipeline-fill" id="pipeline-fill-line"></div>
-                </div>
+        <!-- 💻 CENTER COLUMN: Active Workspace and Dashboard Console -->
+        <section class="console-wrapper scroll-reveal" id="reveal-center">
+            
+            <!-- Quick Badges underneath Header -->
+            <div class="header-badge-list">
+                <div class="header-badge-item"><span>🚚</span> Logistics</div>
+                <div class="header-badge-item"><span>🛒</span> Procurement</div>
+                <div class="header-badge-item"><span>🛡️</span> Risk Mitigation</div>
+                <div class="header-badge-item"><span>🌐</span> Global Operations</div>
             </div>
 
-            <!-- Workspace Scroll Container -->
-            <div class="workspace-scroll">
+            <div class="dashboard-grid">
                 
-                <!-- Welcome/Empty State when no signal selected -->
-                <div class="glass-panel empty-state" id="empty-workspace-state" style="flex: 1; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem;">
-                    <span class="empty-icon" style="font-size: 4rem;">🤖</span>
-                    <h2 style="margin-bottom: 0.5rem; font-size: 1.5rem; color: var(--text-primary);">SignalOps Command Center Ready</h2>
-                    <p style="max-width: 420px; font-size: 0.9rem; line-height: 1.5; margin-bottom: 1.5rem;">Select an incoming Outlook email from the list on the left to trigger the AI analysis pipeline, score urgency, extract tasks, and draft vendor responses.</p>
-                    
-                    <div id="welcome-m365-card" style="background: rgba(0, 242, 254, 0.03); border: 1px dashed rgba(0, 242, 254, 0.25); padding: 1.5rem; border-radius: 10px; max-width: 440px; margin-top: 1rem; text-align: center; transition: var(--transition);">
-                        <div style="font-weight: 700; font-size: 0.9rem; color: var(--neon-cyan); margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
-                            <svg width="16" height="16" viewBox="0 0 23 23">
-                                <rect x="0" y="0" width="10" height="10" fill="#f25022"/>
-                                <rect x="11" y="0" width="10" height="10" fill="#7fba00"/>
-                                <rect x="0" y="11" width="10" height="10" fill="#00a4ef"/>
-                                <rect x="11" y="11" width="10" height="10" fill="#ffb900"/>
-                            </svg>
-                            Connect Microsoft 365 Outlook
+                <!-- Left Pane: Inbound Mail Triage list -->
+                <div class="dashboard-col">
+                    <div class="list-panel glass-panel">
+                        <div class="sidebar-widget">
+                            <div class="widget-title">
+                                <span>Incoming Signals</span>
+                                <span id="inbox-count" class="badge badge-medium">4</span>
+                            </div>
+                            <div style="margin-bottom: 0.6rem;">
+                                <input type="text" id="inbox-search" class="kb-search-input" placeholder="Search signals..." oninput="filterInbox()">
+                            </div>
+                            <div class="list-container" id="email-list-container">
+                                <!-- Populated dynamically by app.js -->
+                                <div class="empty-state">
+                                    <span class="empty-icon">📥</span>
+                                    <p>Loading incoming Outlook inbox...</p>
+                                </div>
+                            </div>
                         </div>
-                        <p style="font-size: 0.75rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 1rem;">
-                            Transition from simulation to production. Sync your live inbox exception logs and trigger automated triage pipelines.
-                        </p>
-                        <button id="welcome-connect-btn" class="btn btn-primary" style="font-size: 0.8rem; padding: 0.45rem 1rem; width: auto;" onclick="openSigninSplash()">
-                            Connect Live Inbox
-                        </button>
+                    </div>
+
+                    <!-- Operational Risks Gauge cards -->
+                    <div class="glass-panel" style="height: 155px; flex-shrink: 0;">
+                        <div class="sidebar-widget" style="padding: 0.85rem;">
+                            <div class="widget-title" style="margin-bottom: 0.5rem;">
+                                <span>Operational Risks</span>
+                                <span class="status-pill status-resolved" style="background: rgba(255, 59, 48, 0.1); color: var(--neon-red); border-color: rgba(255, 59, 48, 0.2); font-size: 0.55rem;">Alerts</span>
+                            </div>
+                            <div class="risk-grid">
+                                <div class="risk-item alert-active" id="risk-supplier">
+                                    <div class="risk-value" style="color: var(--neon-red);">2</div>
+                                    <div class="risk-label">Supplier</div>
+                                </div>
+                                <div class="risk-item alert-warning" id="risk-inventory">
+                                    <div class="risk-value" style="color: var(--neon-orange);">1</div>
+                                    <div class="risk-label">Inventory</div>
+                                </div>
+                                <div class="risk-item" id="risk-transport">
+                                    <div class="risk-value" style="color: var(--neon-yellow);">1</div>
+                                    <div class="risk-label">Transit</div>
+                                </div>
+                                <div class="risk-item" id="risk-compliance">
+                                    <div class="risk-value" style="color: var(--neon-green);">0</div>
+                                    <div class="risk-label">Compliance</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Active Signal Details (hidden initially) -->
-                <div class="glass-panel" id="workspace-details-card" style="display: none;">
-                    <div class="signal-detail-grid">
-                        <div class="signal-meta-card">
-                            <div class="signal-header-block">
-                                <div>
-                                    <div class="signal-subject" id="disp-subject">Subject line displays here</div>
-                                    <div class="signal-from" id="disp-sender">From: sender@company.com</div>
-                                </div>
-                                <div>
-                                    <span class="badge" id="disp-priority">CRITICAL</span>
-                                </div>
-                            </div>
+                <!-- Right Pane: Pipeline visualizer + Triage Workspace -->
+                <div class="operations-center dashboard-col">
+                    <!-- Ingestion pipeline tracker progress nodes -->
+                    <div class="pipeline-visualizer">
+                        <div class="pipeline-step" id="step-ingest">
+                            <div class="pipeline-node">1</div>
+                            <span>Ingest</span>
+                        </div>
+                        <div class="pipeline-step" id="step-parse">
+                            <div class="pipeline-node">2</div>
+                            <span>Parse</span>
+                        </div>
+                        <div class="pipeline-step" id="step-scoring">
+                            <div class="pipeline-node">3</div>
+                            <span>Scoring</span>
+                        </div>
+                        <div class="pipeline-step" id="step-draft">
+                            <div class="pipeline-node">4</div>
+                            <span>Drafting</span>
+                        </div>
+                        <div class="pipeline-step" id="step-complete">
+                            <div class="pipeline-node">5</div>
+                            <span>Ready</span>
+                        </div>
+                        <div class="pipeline-progress-line">
+                            <div class="pipeline-fill" id="pipeline-fill-line"></div>
+                        </div>
+                    </div>
+
+                    <!-- Scrollable Workspace details -->
+                    <div class="workspace-scroll">
+                        
+                        <!-- Welcome / Empty State panel -->
+                        <div class="glass-panel empty-state" id="empty-workspace-state" style="flex: 1; min-height: 380px;">
+                            <span class="empty-icon" style="font-size: 3.5rem;">🤖</span>
+                            <h2 style="margin-bottom: 0.5rem; font-size: 1.35rem; color: var(--text-primary);">Command Center Ready</h2>
+                            <p style="max-width: 360px; font-size: 0.85rem; line-height: 1.5; margin-bottom: 1.2rem;">Select an incoming email exception to run AI parser pipeline, compute urgency, extract tasks, and verify deliverability.</p>
                             
-                            <div class="metadata-grid">
-                                <div class="meta-field">
-                                    <div class="meta-label">Category</div>
-                                    <div class="meta-val" id="disp-category">Shipment Delay</div>
+                            <!-- MS Connect CTA Card -->
+                            <div id="welcome-m365-card" style="background: rgba(0, 242, 254, 0.02); border: 1px dashed rgba(0, 242, 254, 0.2); padding: 1.2rem; border-radius: 8px; max-width: 380px;">
+                                <div style="font-weight: 700; font-size: 0.85rem; color: var(--neon-cyan); margin-bottom: 0.4rem; display: flex; align-items: center; justify-content: center; gap: 0.4rem;">
+                                    <svg width="14" height="14" viewBox="0 0 23 23">
+                                        <rect x="0" y="0" width="10" height="10" fill="#f25022"/>
+                                        <rect x="11" y="0" width="10" height="10" fill="#7fba00"/>
+                                        <rect x="0" y="11" width="10" height="10" fill="#00a4ef"/>
+                                        <rect x="11" y="11" width="10" height="10" fill="#ffb900"/>
+                                    </svg>
+                                    Connect M365 Mailbox
                                 </div>
-                                <div class="meta-field">
-                                    <div class="meta-label">Current Status</div>
-                                    <div class="meta-val">
-                                        <select id="disp-status-select" class="form-input" style="padding: 0.15rem 0.4rem; background: transparent; font-size: 0.8rem; border-color: rgba(255,255,255,0.15);" onchange="handleStatusChange(this.value)">
-                                            <option value="inbox">Inbox</option>
-                                            <option value="in_review">In Review</option>
-                                            <option value="action_pending">Action Pending</option>
-                                            <option value="resolved">Resolved</option>
-                                        </select>
+                                <p style="font-size: 0.72rem; color: var(--text-secondary); line-height: 1.4; margin-bottom: 0.8rem;">Sync live supplier alerts directly from your corporate Outlook account.</p>
+                                <button id="welcome-connect-btn" class="btn btn-primary" style="font-size: 0.75rem; padding: 0.4rem 0.85rem;" onclick="openSigninSplash()">Connect Live Inbox</button>
+                            </div>
+                        </div>
+
+                        <!-- Active Signal Details -->
+                        <div class="glass-panel" id="workspace-details-card" style="display: none;">
+                            <div class="signal-detail-grid">
+                                <div class="signal-meta-card">
+                                    <div class="signal-header-block">
+                                        <div>
+                                            <div class="signal-subject" id="disp-subject">Subject Header</div>
+                                            <div class="signal-from" id="disp-sender">From: sender@company.com</div>
+                                        </div>
+                                        <div>
+                                            <span class="badge" id="disp-priority">CRITICAL</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="metadata-grid">
+                                        <div class="meta-field">
+                                            <div class="meta-label">Category</div>
+                                            <div class="meta-val" id="disp-category">Shipment Delay</div>
+                                        </div>
+                                        <div class="meta-field">
+                                            <div class="meta-label">Signal Status</div>
+                                            <div class="meta-val">
+                                                <select id="disp-status-select" class="form-input" style="padding: 0.1rem 0.4rem; background: transparent; font-size: 0.75rem; border-color: rgba(255,255,255,0.15);" onchange="handleStatusChange(this.value)">
+                                                    <option value="inbox">Inbox</option>
+                                                    <option value="in_review">In Review</option>
+                                                    <option value="action_pending">Action Pending</option>
+                                                    <option value="resolved">Resolved</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Urgency gauge circle visual -->
+                                <div class="gauge-card">
+                                    <div class="gauge-title">Urgency Score</div>
+                                    <div class="gauge-circle">
+                                        <svg class="gauge-svg" width="80" height="80">
+                                            <circle class="gauge-track" cx="40" cy="40" r="35"></circle>
+                                            <circle class="gauge-bar" id="urgency-gauge" cx="40" cy="40" r="35"></circle>
+                                        </svg>
+                                        <span class="gauge-value" id="disp-urgency">94</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Urgency score gauge -->
-                        <div class="gauge-card">
-                            <div class="gauge-title">Urgency Score</div>
-                            <div class="gauge-circle">
-                                <svg class="gauge-svg" width="90" height="90">
-                                    <circle class="gauge-track" cx="45" cy="45" r="40"></circle>
-                                    <circle class="gauge-bar" id="urgency-gauge" cx="45" cy="45" r="40"></circle>
+                        <!-- Root Cause analysis description -->
+                        <div class="glass-panel analysis-card" id="workspace-analysis-card" style="display: none;">
+                            <div class="section-subtitle">
+                                <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                                    <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 4.995z"/>
                                 </svg>
-                                <span class="gauge-value" id="disp-urgency">94</span>
+                                Root Cause &amp; Business Impact
+                            </div>
+                            <div class="analysis-block">
+                                <div class="meta-label" style="color: var(--neon-red);">Estimated Business Impact</div>
+                                <p class="analysis-text" id="disp-business-impact">Financial &amp; production stoppage impacts outline.</p>
+                            </div>
+                            <div class="analysis-block" style="margin-top: 0.8rem;">
+                                <div class="meta-label" style="color: var(--neon-cyan);">Root Cause Context</div>
+                                <p class="analysis-text" id="disp-root-cause">Supplier or logistic disruption bottleneck breakdown.</p>
                             </div>
                         </div>
-                    </div>
-                </div>
 
-                <!-- Root Cause and Business Impact -->
-                <div class="glass-panel analysis-card" id="workspace-analysis-card" style="display: none;">
-                    <div class="section-subtitle">
-                        <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
-                            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-                            <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 4.995z"/>
-                        </svg>
-                        Root Cause & Impact Analysis
-                    </div>
-                    <div class="analysis-block">
-                        <div class="meta-label">Core Business Impact</div>
-                        <p class="analysis-text" id="disp-business-impact">Description of the financial, revenue, and customer service delivery impacts.</p>
-                    </div>
-                    <div class="analysis-block" style="margin-top: 1rem;">
-                        <div class="meta-label">Root Cause / Factors</div>
-                        <p class="analysis-text" id="disp-root-cause">Description of the physical and logistical root cause contributing factors.</p>
-                    </div>
-                </div>
-
-                <!-- Recommended Actions Checklist -->
-                <div class="glass-panel actions-card" id="workspace-actions-card" style="display: none;">
-                    <div class="section-subtitle" style="color: var(--neon-orange);">
-                        <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
-                            <path d="M12.736 14H3.264a1 1 0 0 1-.707-.293l-2-2A1 1 0 0 1 .264 11h15.472a1 1 0 0 1-.293.707l-2 2a1 1 0 0 1-.707.293zM16 10H0V6h16v4zM0 5h16V1.5a1.5 1.5 0 0 0-1.5-1.5h-13A1.5 1.5 0 0 0 0 1.5V5z"/>
-                        </svg>
-                        Recommended Operational Actions
-                    </div>
-                    <div class="action-list" id="action-items-container">
-                        <!-- Populated by JS -->
-                    </div>
-                </div>
-
-                <!-- Email File Attachments & OneDrive sync -->
-                <div class="glass-panel actions-card" id="workspace-attachments-card" style="display: none;">
-                    <div class="section-subtitle" style="color: var(--neon-cyan);">
-                        <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16" style="margin-top:-2px;">
-                            <path d="M4.5 3a2.5 2.5 0 0 1 5 0v9a1.5 1.5 0 0 1-3 0V5a.5.5 0 0 1 1 0v7a.5.5 0 0 0 1 0V3a1.5 1.5 0 1 0-3 0v9a2.5 2.5 0 0 0 5 0V5a.5.5 0 0 1 1 0v7a3.5 3.5 0 1 1-7 0V3z"/>
-                        </svg>
-                        Email Attachments & Document Gateway
-                    </div>
-                    <div id="attachments-container" style="display: flex; flex-direction: column; gap: 0.75rem;">
-                        <!-- Populated by app.js -->
-                    </div>
-                </div>
-
-                <!-- Email Draft response composer -->
-                <div class="glass-panel reply-card" id="workspace-reply-card" style="display: none;">
-                    <div class="reply-header">
-                        <div class="section-subtitle" style="color: var(--neon-purple); margin-bottom: 0;">
-                            <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
-                                <path d="M15.964.686a.5.5 0 0 0-.65-.65L.767 5.855H.766l-.452.18a.5.5 0 0 0-.082.887l.41.26.001.002 4.995 3.178 3.178 4.995.002.002.26.41a.5.5 0 0 0 .886-.083l6-15Zm-1.833 1.89L6.637 10.07l-.215-.338a.5.5 0 0 0-.154-.154l-.338-.215 7.494-7.494 1.178-.471-.47 1.178Z"/>
-                            </svg>
-                            AI Draft Response (Outlook Context)
-                        </div>
-                        <div class="reply-to-info" id="disp-reply-to">To: supplier@company.com</div>
-                    </div>
-                    
-                    <textarea class="reply-body" id="reply-body-field" placeholder="Draft reply text here..." oninput="runDeliverabilityCheck()"></textarea>
-
-                    <!-- ✅ INBOX DELIVERABILITY CHECKER -->
-                    <div id="deliverability-panel" style="
-                        margin-top: 0.85rem;
-                        background: rgba(7, 9, 19, 0.6);
-                        border: 1px solid rgba(0, 242, 254, 0.15);
-                        border-radius: 10px;
-                        padding: 0.9rem 1rem;
-                        font-size: 0.78rem;
-                    ">
-                        <!-- Header row with score gauge -->
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
-                            <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                <span style="font-size: 1rem;">🛡️</span>
-                                <span style="font-weight: 700; color: var(--text-primary); font-size: 0.82rem; letter-spacing: 0.02em;">Inbox Deliverability Checker</span>
+                        <!-- Recommended Actions items lists -->
+                        <div class="glass-panel actions-card" id="workspace-actions-card" style="display: none;">
+                            <div class="section-subtitle" style="color: var(--neon-orange);">
+                                📋 Recommended Operational Actions
                             </div>
-                            <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                <div id="deliverability-bar-wrap" style="width: 90px; height: 6px; background: rgba(255,255,255,0.08); border-radius: 99px; overflow: hidden;">
-                                    <div id="deliverability-bar" style="height: 100%; width: 0%; border-radius: 99px; background: var(--neon-green); transition: width 0.4s ease, background 0.4s ease;"></div>
+                            <div class="action-list" id="action-items-container">
+                                <!-- Populated dynamically by JS -->
+                            </div>
+                        </div>
+
+                        <!-- OneDrive attachment gateway panel -->
+                        <div class="glass-panel actions-card" id="workspace-attachments-card" style="display: none;">
+                            <div class="section-subtitle" style="color: var(--neon-cyan);">
+                                📄 Email Attachments &amp; Document Gateway
+                            </div>
+                            <div id="attachments-container" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                <!-- Populated dynamically by app.js -->
+                            </div>
+                        </div>
+
+                        <!-- Email Draft composer reply panel -->
+                        <div class="glass-panel reply-card" id="workspace-reply-card" style="display: none;">
+                            <div class="reply-header">
+                                <div class="section-subtitle" style="color: var(--neon-purple); margin-bottom: 0;">
+                                    ✉️ AI Draft Response (Outlook Integration)
                                 </div>
-                                <span id="deliverability-score-label" style="font-weight: 800; font-size: 0.85rem; color: var(--neon-green); min-width: 36px; text-align: right;">—</span>
+                                <div class="reply-to-info" id="disp-reply-to">To: supplier@company.com</div>
+                            </div>
+                            
+                            <textarea class="reply-body" id="reply-body-field" placeholder="Draft reply text..." oninput="runDeliverabilityCheck()"></textarea>
+
+                            <!-- Deliverability Checker Card -->
+                            <div id="deliverability-panel" style="
+                                margin-top: 0.75rem;
+                                background: rgba(5, 7, 16, 0.75);
+                                border: 1px solid rgba(0, 242, 254, 0.15);
+                                border-radius: 8px;
+                                padding: 0.8rem 1rem;
+                                font-size: 0.75rem;
+                            ">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem;">
+                                    <div style="display: flex; align-items: center; gap: 0.4rem;">
+                                        <span>🛡️</span>
+                                        <span style="font-weight: 700; color: var(--text-primary);">Inbox Deliverability Score</span>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 0.4rem;">
+                                        <div id="deliverability-bar-wrap" style="width: 80px; height: 5px; background: rgba(255,255,255,0.06); border-radius: 10px; overflow: hidden;">
+                                            <div id="deliverability-bar" style="height: 100%; width: 0%; background: var(--neon-green); transition: width 0.3s;"></div>
+                                        </div>
+                                        <span id="deliverability-score-label" style="font-weight: 800; color: var(--neon-green); min-width: 32px; text-align: right;">—</span>
+                                    </div>
+                                </div>
+                                <div id="deliverability-checklist" style="display: flex; flex-direction: column; gap: 0.3rem;">
+                                    <div style="color: var(--text-muted); font-style: italic; font-size: 0.7rem;">Enter text to perform anti-spam validation.</div>
+                                </div>
+                            </div>
+
+                            <div class="reply-footer" style="margin-top: 0.75rem;">
+                                <div class="reply-status-label" id="reply-status-indicator">Graph sendMail will dispatch this draft response.</div>
+                                <button class="btn btn-primary" onclick="simulateSendReply()" style="background: linear-gradient(135deg, var(--neon-purple), var(--neon-blue)); box-shadow: 0 0 10px rgba(161, 140, 209, 0.2);">
+                                    Approve &amp; Send Mail
+                                </button>
                             </div>
                         </div>
 
-                        <!-- Checklist items -->
-                        <div id="deliverability-checklist" style="display: flex; flex-direction: column; gap: 0.38rem;">
-                            <!-- Populated by runDeliverabilityCheck() -->
-                            <div style="color: var(--text-muted); font-style: italic; font-size: 0.74rem;">Start editing the reply draft above to run anti-spam analysis...</div>
+                        <!-- Knowledge base compiler viewer detail -->
+                        <div class="glass-panel kb-detail-card" id="kb-detail-viewer" style="display: none;">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+                                <div>
+                                    <div class="kb-title" id="kb-viewer-title">Incident Mitigation Title</div>
+                                    <div class="kb-meta" id="kb-viewer-meta">Details</div>
+                                </div>
+                                <button class="btn btn-secondary" onclick="closeKbArticle()" style="padding: 0.25rem 0.5rem; font-size: 0.7rem;">Close</button>
+                            </div>
+                            <div class="kb-detail-block">
+                                <div class="meta-label">Background Incident Details</div>
+                                <p class="analysis-text" id="kb-viewer-background"></p>
+                            </div>
+                            <div class="kb-detail-block">
+                                <div class="meta-label">Parsed Root Cause</div>
+                                <p class="analysis-text" id="kb-viewer-cause"></p>
+                            </div>
+                            <div class="kb-detail-block">
+                                <div class="meta-label">Executed Resolution Checklist</div>
+                                <p class="analysis-text" id="kb-viewer-resolution"></p>
+                            </div>
+                            <div class="kb-detail-block">
+                                <div class="meta-label">Future Prevention Measures</div>
+                                <p class="analysis-text" id="kb-viewer-prevention"></p>
+                            </div>
+                            <div class="kb-detail-block">
+                                <div class="meta-label">Involved Suppliers / Vendors</div>
+                                <p class="analysis-text" id="kb-viewer-suppliers"></p>
+                            </div>
+                            <div class="kb-item-tags" id="kb-viewer-tags" style="margin-top: 0.75rem;"></div>
                         </div>
-                    </div>
-                    <!-- END DELIVERABILITY CHECKER -->
-                    
-                    <div class="reply-footer">
-                        <div class="reply-status-label" id="reply-status-indicator">Approved drafts will send through the MS Graph sendMail API.</div>
-                        <button class="btn btn-primary" onclick="simulateSendReply()" style="background: linear-gradient(135deg, var(--neon-purple), var(--neon-blue)); box-shadow: 0 0 15px rgba(161, 140, 209, 0.3);">
-                            Approve & Send Mail
-                        </button>
+
                     </div>
                 </div>
+            </div>
 
-                <!-- Detailed Knowledge base viewer when viewing article -->
-                <div class="glass-panel kb-detail-card" id="kb-detail-viewer" style="display: none;">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                        <div>
-                            <div class="kb-title" id="kb-viewer-title">Problem Title</div>
-                            <div class="kb-meta" id="kb-viewer-meta">Created Date | Departments</div>
+            <!-- M365 Integration Configuration Sidebar Widget inside center column bottom -->
+            <div class="glass-panel" id="m365-setup-card" style="padding: 0.75rem 1rem;">
+                <div class="sidebar-widget" style="padding: 0;">
+                    <div class="widget-title" style="margin-bottom: 0.4rem; border: none; padding: 0;">
+                        <span>Outlook Integration Settings (M365 API)</span>
+                        <span id="m365-status-badge" class="status-pill status-inbox" style="background: rgba(255, 59, 48, 0.1); color: var(--neon-red); border-color: rgba(255, 59, 48, 0.2); font-size: 0.55rem;">Disconnected</span>
+                    </div>
+                    <div id="m365-config-form" style="display: flex; gap: 0.5rem; align-items: center;">
+                        <input type="text" id="m365-client-id" class="kb-search-input" style="font-size: 0.75rem; padding: 0.3rem 0.5rem;" placeholder="Azure AD Client ID">
+                        <input type="text" id="m365-tenant-id" class="kb-search-input" style="font-size: 0.75rem; padding: 0.3rem 0.5rem; width: 120px;" placeholder="Tenant (common)">
+                        <button class="btn btn-primary" style="padding: 0.35rem 0.75rem; font-size: 0.75rem;" onclick="connectM365()">Connect</button>
+                    </div>
+                    <div id="m365-connected-controls" style="display: none; justify-content: space-between; align-items: center; width: 100%;">
+                        <div style="font-size: 0.75rem; color: var(--text-secondary);">
+                            Live Outlook Feed: <strong id="m365-username" style="color: var(--neon-green);">user@company.com</strong>
                         </div>
-                        <button class="btn btn-secondary" onclick="closeKbArticle()" style="padding: 0.3rem 0.6rem; font-size: 0.75rem;">
-                            Close Article
-                        </button>
+                        <div style="display: flex; gap: 0.4rem;">
+                            <button class="btn btn-primary" style="padding: 0.3rem 0.65rem; font-size: 0.72rem;" onclick="syncM365Inbox()">Sync Inbox</button>
+                            <button class="btn btn-secondary" style="padding: 0.3rem 0.65rem; font-size: 0.72rem;" onclick="disconnectM365()">Disconnect</button>
+                        </div>
                     </div>
-                    <div class="kb-detail-block">
-                        <div class="meta-label">Background Context</div>
-                        <p class="analysis-text" id="kb-viewer-background"></p>
-                    </div>
-                    <div class="kb-detail-block">
-                        <div class="meta-label">Root Cause</div>
-                        <p class="analysis-text" id="kb-viewer-cause"></p>
-                    </div>
-                    <div class="kb-detail-block">
-                        <div class="meta-label">Resolution Steps Taken</div>
-                        <p class="analysis-text" id="kb-viewer-resolution"></p>
-                    </div>
-                    <div class="kb-detail-block">
-                        <div class="meta-label">Prevention Measures</div>
-                        <p class="analysis-text" id="kb-viewer-prevention"></p>
-                    </div>
-                    <div class="kb-detail-block">
-                        <div class="meta-label">Related Suppliers</div>
-                        <p class="analysis-text" id="kb-viewer-suppliers"></p>
-                    </div>
-                    <div class="kb-item-tags" id="kb-viewer-tags" style="margin-top: 1rem;"></div>
                 </div>
-
             </div>
         </section>
 
-        <!-- RIGHT COLUMN: Extracted Operational Tasks & Knowledge Base Articles -->
-        <section class="dashboard-col">
-            <!-- Active Extracted Tasks -->
-            <div class="glass-panel" style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
-                <div class="sidebar-widget" style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
-                    <div class="widget-title">
-                        <span>Extracted Tasks</span>
-                        <span id="tasks-count" class="badge badge-low" style="background: rgba(52, 199, 89, 0.1); color: var(--neon-green); border-color: rgba(52, 199, 89, 0.2);">0 Completed</span>
+        <!-- 🧬 RIGHT COLUMN: AI Triage Flowchart & Estimated Savings -->
+        <section class="dashboard-col scroll-reveal" id="reveal-right">
+            <div class="glass-panel flowchart-panel" style="flex: 1.3;">
+                <div class="flowchart-header">
+                    <span>🧬 Operational AI Integration Flow</span>
+                </div>
+                <div class="flowchart-flow">
+                    <!-- Outlook Integration -->
+                    <div class="flowchart-step">
+                        <div class="flowchart-node">📬</div>
+                        <div class="flowchart-detail">
+                            <div class="flowchart-title">Outlook Integration</div>
+                            <div class="flowchart-desc">Real-time webhook ingestion of inbound carrier and vendor exceptions.</div>
+                        </div>
                     </div>
-                    <div class="sidebar-tasks" id="tasks-list-container" style="flex: 1;">
-                        <!-- Dynamically filled by JS -->
-                        <div class="empty-state">
-                            <span class="empty-icon" style="font-size: 2rem;">📋</span>
-                            <p>No operational tasks active</p>
+                    
+                    <!-- AI Smart Triage -->
+                    <div class="flowchart-step">
+                        <div class="flowchart-node" style="border-color: var(--neon-cyan);">🤖</div>
+                        <div class="flowchart-detail">
+                            <div class="flowchart-title">Smart Triage &amp; Prioritization</div>
+                            <div class="flowchart-desc">NLP parsing categorizes issues and grades urgency levels from 0 to 100.</div>
+                        </div>
+                    </div>
+
+                    <!-- Auto Tasks -->
+                    <div class="flowchart-step">
+                        <div class="flowchart-node" style="border-color: var(--neon-orange);">📋</div>
+                        <div class="flowchart-detail">
+                            <div class="flowchart-title">Auto Tasks Routing</div>
+                            <div class="flowchart-desc">Dispatches detailed tickets directly to target department operations teams.</div>
+                        </div>
+                    </div>
+
+                    <!-- One-click replies -->
+                    <div class="flowchart-step">
+                        <div class="flowchart-node" style="border-color: var(--neon-purple);">✉️</div>
+                        <div class="flowchart-detail">
+                            <div class="flowchart-title">One-Click Vendor Replies</div>
+                            <div class="flowchart-desc">Creates instant executive reply drafts audited by our deliverability checker.</div>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic Knowledge base -->
+                    <div class="flowchart-step">
+                        <div class="flowchart-node" style="border-color: var(--neon-green);">🗄️</div>
+                        <div class="flowchart-detail">
+                            <div class="flowchart-title">Dynamic Knowledge Base</div>
+                            <div class="flowchart-desc">Compiles resolution records into local playbook articles upon completion.</div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Knowledge Base list -->
-            <div class="glass-panel" style="flex: 1.2; display: flex; flex-direction: column; overflow: hidden;">
-                <div class="sidebar-widget" style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
-                    <div class="widget-title">
-                        <span>Knowledge Articles</span>
-                        <span class="badge badge-low" style="background: rgba(0, 242, 254, 0.1); color: var(--neon-cyan); border-color: rgba(0, 242, 254, 0.2);">DATABASE</span>
+            <!-- Savings card -->
+            <div class="savings-card scroll-reveal">
+                <div class="savings-title">Estimated Savings</div>
+                <div class="savings-value">$300,000+</div>
+                <div class="savings-desc">Annually saved in avoided production line outages and manual clerical triage labor.</div>
+            </div>
+            
+            <!-- Tasks List extracted widget sidebar -->
+            <div class="glass-panel" style="height: 180px; flex-shrink: 0; overflow: hidden; display: flex; flex-direction: column;">
+                <div class="sidebar-widget" style="padding: 0.85rem;">
+                    <div class="widget-title" style="margin-bottom: 0.4rem;">
+                        <span>Extracted Tasks</span>
+                        <span id="tasks-count" class="badge badge-low">0 Completed</span>
                     </div>
-                    <div class="kb-search-container">
-                        <input type="text" id="kb-search" class="kb-search-input" placeholder="Search knowledge base..." oninput="filterKb()">
+                    <div class="sidebar-tasks" id="tasks-list-container" style="flex: 1;">
+                        <div class="empty-state" style="padding: 1rem;">
+                            <span class="empty-icon" style="font-size: 1.5rem; margin-bottom: 0.35rem;">📋</span>
+                            <p style="font-size: 0.72rem;">No operational tasks active</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Knowledge base search articles sidebar -->
+            <div class="glass-panel" style="height: 175px; flex-shrink: 0; overflow: hidden; display: flex; flex-direction: column;">
+                <div class="sidebar-widget" style="padding: 0.85rem;">
+                    <div class="widget-title" style="margin-bottom: 0.4rem;">
+                        <span>Knowledge Articles</span>
+                        <span class="badge badge-low" style="background: rgba(0, 242, 254, 0.1); color: var(--neon-cyan); border-color: rgba(0, 242, 254, 0.2); font-size: 0.55rem;">Database</span>
+                    </div>
+                    <div class="kb-search-container" style="margin-bottom: 0.35rem;">
+                        <input type="text" id="kb-search" class="kb-search-input" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;" placeholder="Search knowledge articles..." oninput="filterKb()">
                     </div>
                     <div class="kb-list" id="kb-articles-container" style="flex: 1;">
-                        <!-- Populated by JS -->
+                        <!-- Filled by app.js -->
                     </div>
                 </div>
             </div>
         </section>
 
     </main>
+
+    <!-- 💹 Section 3: Proven ROI Stats Bar Panel -->
+    <section class="roi-section scroll-reveal" id="reveal-roi">
+        <div class="roi-container">
+            <div class="roi-header">
+                <span>⚡ PROVEN ROI. MEASURABLE IMPACT.</span>
+            </div>
+            <div class="roi-grid">
+                <!-- MTTT Reduced -->
+                <div class="roi-card">
+                    <div class="roi-icon-wrap">⏱️</div>
+                    <div class="roi-detail">
+                        <span class="roi-label">MTTT REDUCED</span>
+                        <div class="roi-value-group">
+                            <span class="roi-old">2 - 4 hrs</span>
+                            <span class="roi-arrow">→</span>
+                            <span class="roi-new">&lt; 30 sec</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SLA Penalties -->
+                <div class="roi-card">
+                    <div class="roi-icon-wrap">💵</div>
+                    <div class="roi-detail">
+                        <span class="roi-label">SLA PENALTIES</span>
+                        <div class="roi-value-group">
+                            <span class="roi-old">$250k/yr</span>
+                            <span class="roi-arrow">→</span>
+                            <span class="roi-new">&lt; $20k/yr</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Knowledge Capture -->
+                <div class="roi-card">
+                    <div class="roi-icon-wrap">🗃️</div>
+                    <div class="roi-detail">
+                        <span class="roi-label">KNOWLEDGE CAPTURE</span>
+                        <div class="roi-value-group">
+                            <span class="roi-old">Siloed</span>
+                            <span class="roi-arrow">→</span>
+                            <span class="roi-new">100% Auto</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Response Quality -->
+                <div class="roi-card">
+                    <div class="roi-icon-wrap">⭐</div>
+                    <div class="roi-detail">
+                        <span class="roi-label">RESPONSE QUALITY</span>
+                        <div class="roi-value-group">
+                            <span class="roi-old">Variable</span>
+                            <span class="roi-arrow">→</span>
+                            <span class="roi-new">Exec-Ready</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 🌐 Section 4: Integrations Footer -->
+    <footer class="integrations-footer scroll-reveal" id="reveal-footer">
+        <div class="footer-title">Built to Integrate. Built to Scale.</div>
+        
+        <div class="integration-logos">
+            <!-- M365 -->
+            <div class="logo-item">
+                <span class="logo-icon">📧</span>
+                <span>Microsoft 365</span>
+            </div>
+            <!-- SAP -->
+            <div class="logo-item">
+                <span class="logo-icon">📊</span>
+                <span>SAP ERP</span>
+            </div>
+            <!-- Oracle -->
+            <div class="logo-item">
+                <span class="logo-icon">📦</span>
+                <span>Oracle</span>
+            </div>
+            <!-- AWS -->
+            <div class="logo-item">
+                <span class="logo-icon">☁️</span>
+                <span>AWS Cloud</span>
+            </div>
+            <!-- Azure -->
+            <div class="logo-item">
+                <span class="logo-icon">🔷</span>
+                <span>Azure</span>
+            </div>
+        </div>
+
+        <div class="footer-notice">
+            <span><span class="footer-notice-dot"></span>Microservices Ready</span>
+            <span><span class="footer-notice-dot"></span>Cloud-Native &amp; Serverless</span>
+            <span><span class="footer-notice-dot"></span>Zero Downtime Integration</span>
+        </div>
+    </footer>
 
     <!-- Custom Simulator Modal Overlay -->
     <div class="modal-overlay" id="simulator-modal">
@@ -453,11 +662,29 @@
     <!-- Dedicated Outlook Login Splash Gate -->
     <div class="modal-overlay" id="signin-splash-screen" style="display: flex; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--bg-main); background-image: radial-gradient(at 50% 50%, rgba(20, 30, 82, 0.4) 0px, transparent 100%); z-index: 9999; align-items: center; justify-content: center;">
         <div class="glass-panel modal-content" style="width: 480px; padding: 2.5rem; text-align: center; border-color: var(--border-color); box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-            <!-- Icon/Logo -->
-            <div class="brand-logo" style="width: 64px; height: 64px; font-size: 1.6rem; border-radius: 12px; margin: 0 auto 1.5rem; box-shadow: var(--glow-cyan); background: linear-gradient(135deg, var(--neon-cyan), var(--neon-blue)); color: #070913;">SO</div>
+            <!-- Hexagonal S-Logo -->
+            <svg class="hex-logo-svg" width="64" height="64" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin: 0 auto 1.5rem;">
+                <polygon points="50,5 90,28 90,72 50,95 10,72 10,28" stroke="url(#logo-grad-splash)" stroke-width="6" fill="rgba(6, 8, 20, 0.95)" />
+                <path d="M28,38 L50,22 L72,38 L72,50 L50,34 L38,43 L28,35 Z" fill="url(#cyan-grad-splash)" />
+                <path d="M72,62 L50,78 L28,62 L28,50 L50,66 L62,57 L72,65 Z" fill="url(#blue-grad-splash)" />
+                <defs>
+                    <linearGradient id="logo-grad-splash" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stop-color="#00f2fe" />
+                        <stop offset="100%" stop-color="#a18cd1" />
+                    </linearGradient>
+                    <linearGradient id="cyan-grad-splash" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stop-color="#00f2fe" />
+                        <stop offset="100%" stop-color="#4facfe" />
+                    </linearGradient>
+                    <linearGradient id="blue-grad-splash" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stop-color="#4facfe" />
+                        <stop offset="100%" stop-color="#0062ff" />
+                    </linearGradient>
+                </defs>
+            </svg>
             
-            <h2 style="font-family: 'Outfit', sans-serif; font-size: 1.75rem; margin-bottom: 0.25rem; font-weight: 700; color: var(--text-primary);">SignalOps Command Center</h2>
-            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.75rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">Supply Chain AI Triage Engine</p>
+            <h2 style="font-family: 'Outfit', sans-serif; font-size: 1.75rem; margin-bottom: 0.25rem; font-weight: 700; color: var(--text-primary);">Signal Console</h2>
+            <p style="color: var(--text-muted); font-size: 0.82rem; margin-bottom: 1.75rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700;">Supply Chain AI Triage Command Center</p>
             
             <!-- Credentials section -->
             <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.5rem; text-align: left;">
@@ -493,7 +720,6 @@
                 <strong style="color: var(--neon-orange);">Active AD Notice:</strong> Direct Microsoft login redirects require a valid, registered Azure AD App Client ID. If evaluating locally, click <strong>Launch Offline Simulator Sandbox</strong> above to bypass this screen.
             </div>
             
-            <!-- Connection indicator status -->
             <div style="margin-top: 1.5rem; font-size: 0.75rem; color: var(--text-muted);">
                 System status: <span style="color: var(--neon-green);">● Online</span> | Secure TLS 1.3 Encryption
             </div>
@@ -513,7 +739,6 @@
                 Vendor response sent through Microsoft Graph API.
             </p>
             
-            <!-- Checklist ticks -->
             <div style="text-align: left; background: rgba(7, 9, 19, 0.5); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 1.5rem; font-size: 0.8rem; display: flex; flex-direction: column; gap: 0.5rem;">
                 <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--neon-green);">
                     <span style="font-weight: bold;">✓</span>
@@ -530,7 +755,7 @@
             </div>
 
             <button class="btn btn-secondary" style="width: 100%; justify-content: center; border-color: var(--neon-green); color: var(--neon-green); box-shadow: 0 0 10px rgba(52, 199, 89, 0.1);" onclick="closeSuccessModal()">
-                Acknowledge & Close
+                Acknowledge &amp; Close
             </button>
         </div>
     </div>
