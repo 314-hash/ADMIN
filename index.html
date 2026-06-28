@@ -25,7 +25,16 @@
             </div>
         </div>
 
-        <div class="header-actions">
+        <div class="header-actions" style="display: flex; gap: 0.75rem; align-items: center;">
+            <button id="header-connect-btn" class="btn btn-secondary" onclick="openSigninSplash()" style="border-color: var(--neon-cyan); color: var(--neon-cyan); box-shadow: 0 0 10px rgba(0, 242, 254, 0.15);">
+                <svg width="16" height="16" viewBox="0 0 23 23" style="margin-right: 0.4rem; margin-top: -2px;">
+                    <rect x="0" y="0" width="10" height="10" fill="#f25022"/>
+                    <rect x="11" y="0" width="10" height="10" fill="#7fba00"/>
+                    <rect x="0" y="11" width="10" height="10" fill="#00a4ef"/>
+                    <rect x="11" y="11" width="10" height="10" fill="#ffb900"/>
+                </svg>
+                <span id="header-m365-text">Connect M365</span>
+            </button>
             <button id="btn-simulate" class="btn btn-primary" onclick="openSimulatorModal()">
                 <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="margin-top:-2px;">
                     <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h-3v-3A.5.5 0 0 1 8 4z"/>
@@ -85,6 +94,8 @@
                             <div class="risk-label">Compliance Risks</div>
                         </div>
                     </div>
+                </div>
+            </div>
             <!-- Microsoft 365 Integration Panel -->
             <div class="glass-panel" id="m365-setup-card" style="padding: 1rem; margin-top: 0.25rem;">
                 <div class="sidebar-widget" style="padding: 0;">
@@ -157,10 +168,28 @@
             <div class="workspace-scroll">
                 
                 <!-- Welcome/Empty State when no signal selected -->
-                <div class="glass-panel empty-state" id="empty-workspace-state" style="flex: 1;">
+                <div class="glass-panel empty-state" id="empty-workspace-state" style="flex: 1; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem;">
                     <span class="empty-icon" style="font-size: 4rem;">🤖</span>
                     <h2 style="margin-bottom: 0.5rem; font-size: 1.5rem; color: var(--text-primary);">SignalOps Command Center Ready</h2>
-                    <p style="max-width: 420px; font-size: 0.9rem; line-height: 1.5;">Select an incoming Outlook email from the list on the left to trigger the AI analysis pipeline, score urgency, extract tasks, and draft vendor responses.</p>
+                    <p style="max-width: 420px; font-size: 0.9rem; line-height: 1.5; margin-bottom: 1.5rem;">Select an incoming Outlook email from the list on the left to trigger the AI analysis pipeline, score urgency, extract tasks, and draft vendor responses.</p>
+                    
+                    <div id="welcome-m365-card" style="background: rgba(0, 242, 254, 0.03); border: 1px dashed rgba(0, 242, 254, 0.25); padding: 1.5rem; border-radius: 10px; max-width: 440px; margin-top: 1rem; text-align: center; transition: var(--transition);">
+                        <div style="font-weight: 700; font-size: 0.9rem; color: var(--neon-cyan); margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                            <svg width="16" height="16" viewBox="0 0 23 23">
+                                <rect x="0" y="0" width="10" height="10" fill="#f25022"/>
+                                <rect x="11" y="0" width="10" height="10" fill="#7fba00"/>
+                                <rect x="0" y="11" width="10" height="10" fill="#00a4ef"/>
+                                <rect x="11" y="11" width="10" height="10" fill="#ffb900"/>
+                            </svg>
+                            Connect Microsoft 365 Outlook
+                        </div>
+                        <p style="font-size: 0.75rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 1rem;">
+                            Transition from simulation to production. Sync your live inbox exception logs and trigger automated triage pipelines.
+                        </p>
+                        <button id="welcome-connect-btn" class="btn btn-primary" style="font-size: 0.8rem; padding: 0.45rem 1rem; width: auto;" onclick="openSigninSplash()">
+                            Connect Live Inbox
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Active Signal Details (hidden initially) -->
@@ -267,7 +296,38 @@
                         <div class="reply-to-info" id="disp-reply-to">To: supplier@company.com</div>
                     </div>
                     
-                    <textarea class="reply-body" id="reply-body-field" placeholder="Draft reply text here..."></textarea>
+                    <textarea class="reply-body" id="reply-body-field" placeholder="Draft reply text here..." oninput="runDeliverabilityCheck()"></textarea>
+
+                    <!-- ✅ INBOX DELIVERABILITY CHECKER -->
+                    <div id="deliverability-panel" style="
+                        margin-top: 0.85rem;
+                        background: rgba(7, 9, 19, 0.6);
+                        border: 1px solid rgba(0, 242, 254, 0.15);
+                        border-radius: 10px;
+                        padding: 0.9rem 1rem;
+                        font-size: 0.78rem;
+                    ">
+                        <!-- Header row with score gauge -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <span style="font-size: 1rem;">🛡️</span>
+                                <span style="font-weight: 700; color: var(--text-primary); font-size: 0.82rem; letter-spacing: 0.02em;">Inbox Deliverability Checker</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <div id="deliverability-bar-wrap" style="width: 90px; height: 6px; background: rgba(255,255,255,0.08); border-radius: 99px; overflow: hidden;">
+                                    <div id="deliverability-bar" style="height: 100%; width: 0%; border-radius: 99px; background: var(--neon-green); transition: width 0.4s ease, background 0.4s ease;"></div>
+                                </div>
+                                <span id="deliverability-score-label" style="font-weight: 800; font-size: 0.85rem; color: var(--neon-green); min-width: 36px; text-align: right;">—</span>
+                            </div>
+                        </div>
+
+                        <!-- Checklist items -->
+                        <div id="deliverability-checklist" style="display: flex; flex-direction: column; gap: 0.38rem;">
+                            <!-- Populated by runDeliverabilityCheck() -->
+                            <div style="color: var(--text-muted); font-style: italic; font-size: 0.74rem;">Start editing the reply draft above to run anti-spam analysis...</div>
+                        </div>
+                    </div>
+                    <!-- END DELIVERABILITY CHECKER -->
                     
                     <div class="reply-footer">
                         <div class="reply-status-label" id="reply-status-indicator">Approved drafts will send through the MS Graph sendMail API.</div>

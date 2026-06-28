@@ -286,6 +286,9 @@ function selectEmail(emailId) {
         document.getElementById('disp-reply-to').textContent = `To: ${email.sender}`;
         document.getElementById('reply-body-field').value = email.draftReply;
         
+        // Run deliverability check on the pre-filled AI draft immediately
+        runDeliverabilityCheck();
+        
         // Render Attachments & Document Gateway
         const attachmentsCard = document.getElementById('workspace-attachments-card');
         const attachmentsContainer = document.getElementById('attachments-container');
@@ -651,9 +654,7 @@ async function simulateSendReply() {
     const draftText = document.getElementById('reply-body-field').value;
     email.draftReply = draftText;
     
-    const token = localStorage.getItem('m365_access_token');
-    
-    if (token) {
+    if (isM365Connected()) {
         showToast('Sending via Microsoft Graph SendMail API...');
         
         const payload = {
@@ -929,11 +930,57 @@ function filterKb() {
 // MICROSOFT 365 OAUTH 2.0 PKCE & GRAPH API
 // ==========================================
 
+// Helper to check if a token is a valid format (JWT or opaque token)
+// IDX14100 fix: MS Graph SDK requires proper JWS compact serialization (header.payload.signature).
+// A token must be a long string AND have exactly 2 dots (JWT/JWS) or 4 dots (JWE).
+// Reject anything that does not meet this format to prevent the SDK from throwing IDX14100.
+function isValidToken(token) {
+    if (!token || typeof token !== 'string') return false;
+    const trimmed = token.trim();
+    if (
+        trimmed === '' ||
+        trimmed === 'undefined' ||
+        trimmed === 'null' ||
+        trimmed === 'mock_access_token'
+    ) return false;
+    // Must be a long enough string to be a real token
+    if (trimmed.length <= 50) return false;
+    // Must conform to JWT compact serialization: exactly 2 dots (JWS) or 4 dots (JWE)
+    const dotCount = (trimmed.match(/\./g) || []).length;
+    if (dotCount !== 2 && dotCount !== 4) {
+        console.warn('isValidToken: Token rejected — incorrect JWT segment count (dots found: ' + dotCount + '). Expected 2 (JWS) or 4 (JWE).');
+        return false;
+    }
+    return true;
+}
+
+// Helper to determine if we are in live Microsoft 365 connected mode (vs offline simulator)
+function isM365Connected() {
+    const isSimulatorMode = sessionStorage.getItem('offline_simulator_mode') === 'true';
+    if (isSimulatorMode) return false;
+    
+    const token = localStorage.getItem('m365_access_token');
+    return isValidToken(token);
+}
+
 // Helper to get initialized MS Graph Client
 function getGraphClient() {
-    const token = localStorage.getItem('m365_access_token');
-    if (!token) return null;
+    if (!isM365Connected()) return null;
     
+    const token = localStorage.getItem('m365_access_token');
+
+    // IDX14100 guard: double-check the stored token before handing it to the SDK.
+    // If somehow an invalid token slipped into localStorage, purge it immediately
+    // and force the user to re-authenticate rather than letting the SDK throw IDX14100.
+    if (!isValidToken(token)) {
+        console.error('getGraphClient: Stored token is invalid or malformed. Clearing credentials.');
+        localStorage.removeItem('m365_access_token');
+        localStorage.removeItem('m365_refresh_token');
+        updateM365UIState(null);
+        showToast('Session token is malformed. Please reconnect to Microsoft 365.');
+        return null;
+    }
+
     if (typeof MicrosoftGraph === 'undefined') {
         console.error("MicrosoftGraph SDK not loaded");
         return null;
@@ -994,7 +1041,6 @@ async function generateCodeChallenge(v) {
 function initializeM365UI() {
     const clientId = localStorage.getItem('m365_client_id');
     const tenantId = localStorage.getItem('m365_tenant_id') || 'common';
-    const token = localStorage.getItem('m365_access_token');
     
     // Config panel inside main dashboard
     const clientIdInput = document.getElementById('m365-client-id');
@@ -1008,7 +1054,16 @@ function initializeM365UI() {
     if (splashClientId && clientId) splashClientId.value = clientId;
     if (splashTenantId) splashTenantId.value = tenantId;
 
-    updateM365UIState(token);
+    const token = localStorage.getItem('m365_access_token');
+    const connected = isM365Connected();
+    updateM365UIState(connected ? token : null);
+}
+
+function openSigninSplash() {
+    const splashScreen = document.getElementById('signin-splash-screen');
+    if (splashScreen) {
+        splashScreen.style.display = 'flex';
+    }
 }
 
 function updateM365UIState(token) {
@@ -1017,6 +1072,13 @@ function updateM365UIState(token) {
     const connectedControls = document.getElementById('m365-connected-controls');
     const usernameElem = document.getElementById('m365-username');
     const splashScreen = document.getElementById('signin-splash-screen');
+    
+    // Header elements
+    const headerConnectBtn = document.getElementById('header-connect-btn');
+    const headerM365Text = document.getElementById('header-m365-text');
+    
+    // Welcome connect card
+    const welcomeM365Card = document.getElementById('welcome-m365-card');
     
     if (token) {
         if (badge) {
@@ -1035,6 +1097,22 @@ function updateM365UIState(token) {
 
         // Hide full-screen login splash if connected
         if (splashScreen) splashScreen.style.display = 'none';
+        
+        // Update header button to show profile / sign out action
+        if (headerConnectBtn) {
+            headerConnectBtn.onclick = disconnectM365;
+            headerConnectBtn.style.borderColor = "var(--neon-green)";
+            headerConnectBtn.style.color = "var(--neon-green)";
+            headerConnectBtn.style.boxShadow = "0 0 10px rgba(52, 199, 89, 0.15)";
+        }
+        if (headerM365Text) {
+            headerM365Text.textContent = "Sign Out";
+        }
+        
+        // Hide welcome connect card
+        if (welcomeM365Card) {
+            welcomeM365Card.style.display = 'none';
+        }
     } else {
         if (badge) {
             badge.textContent = "Disconnected";
@@ -1051,6 +1129,22 @@ function updateM365UIState(token) {
         const isSimulatorMode = sessionStorage.getItem('offline_simulator_mode') === 'true';
         if (splashScreen) {
             splashScreen.style.display = isSimulatorMode ? 'none' : 'flex';
+        }
+        
+        // Update header button to show connect action
+        if (headerConnectBtn) {
+            headerConnectBtn.onclick = openSigninSplash;
+            headerConnectBtn.style.borderColor = "var(--neon-cyan)";
+            headerConnectBtn.style.color = "var(--neon-cyan)";
+            headerConnectBtn.style.boxShadow = "0 0 10px rgba(0, 242, 254, 0.15)";
+        }
+        if (headerM365Text) {
+            headerM365Text.textContent = "Connect M365";
+        }
+        
+        // Show welcome connect card
+        if (welcomeM365Card) {
+            welcomeM365Card.style.display = 'block';
         }
     }
 }
@@ -1200,10 +1294,14 @@ async function checkM365Callback() {
         } else {
             console.error('Token Exchange Error:', data);
             showToast('Token Handshake failed: ' + (data.error_description || 'Unknown error'));
+            localStorage.removeItem('m365_access_token');
+            localStorage.removeItem('m365_refresh_token');
         }
     } catch (err) {
         console.error(err);
         showToast('CORS/Network error during token exchange.');
+        localStorage.removeItem('m365_access_token');
+        localStorage.removeItem('m365_refresh_token');
     }
     
     return Promise.resolve();
@@ -1223,8 +1321,7 @@ async function fetchUserProfile(token) {
 
 // Sync live emails from Microsoft Graph API
 async function syncM365Inbox() {
-    const token = localStorage.getItem('m365_access_token');
-    if (!token) {
+    if (!isM365Connected()) {
         showToast('Please login to Microsoft 365 first.');
         return;
     }
@@ -1393,9 +1490,8 @@ async function saveToOneDrive(emailId, attachmentIndex) {
     if (!email || !email.attachments || !email.attachments[attachmentIndex]) return;
     
     const att = email.attachments[attachmentIndex];
-    const token = localStorage.getItem('m365_access_token');
     
-    if (token) {
+    if (isM365Connected()) {
         showToast(`Uploading ${att.name} to OneDrive via Graph API...`);
         
         try {
@@ -1423,3 +1519,190 @@ async function saveToOneDrive(emailId, attachmentIndex) {
     }
 }
 
+
+// ==========================================
+// INBOX DELIVERABILITY CHECKER ENGINE
+// ==========================================
+
+const SPAM_TRIGGER_WORDS = [
+    'free', 'winner', 'congratulations', 'prize', 'click here', 'act now',
+    'limited time', 'urgent offer', 'cash', 'earn money', 'make money',
+    'no cost', 'risk free', 'guaranteed', 'miracle', 'special promotion',
+    'you have been selected', 'claim now', 'exclusive deal', 'buy now',
+    'order now', 'double your', 'million dollars', '100% free', 'apply now',
+    'dear friend', 'this is not spam', 'unsubscribe', 'opt out',
+    'increase sales', 'weight loss', 'lose weight', 'online pharmacy',
+    'lowest price', 'best price', 'discount', 'save big', 'no obligation'
+];
+
+const SPAM_SUBJECT_WORDS = [
+    'free', 'win', 'winner', 'urgent', 'act now', 'limited time',
+    'congratulations', 'claim', 'selected', 'guaranteed', '!!', '???'
+];
+
+// 12-rule anti-spam deliverability audit
+function getDeliverabilityRules(text, subject) {
+    const lc = text.toLowerCase();
+    const lcSubj = subject.toLowerCase();
+    const words = text.trim().split(/\s+/);
+    const wordCount = words.length;
+
+    return [
+        {
+            id: 'no_spam_words',
+            label: 'No spam trigger words in body',
+            tip: 'Avoid: free, win, guaranteed, click here, act now, earn money, etc.',
+            points: 15,
+            pass: !SPAM_TRIGGER_WORDS.some(w => lc.includes(w))
+        },
+        {
+            id: 'no_spam_subject',
+            label: 'Clean subject line (no spam flags)',
+            tip: 'Remove: FREE, WIN, URGENT, !!!, ??? from the subject line',
+            points: 15,
+            pass: !SPAM_SUBJECT_WORDS.some(w => lcSubj.includes(w))
+        },
+        {
+            id: 'no_all_caps',
+            label: 'No excessive ALL CAPS usage',
+            tip: 'Avoid writing entire words or sentences in capitals',
+            points: 8,
+            pass: (() => {
+                const capsWords = words.filter(w => w.length > 3 && w === w.toUpperCase() && /[A-Z]/.test(w));
+                return capsWords.length <= 2;
+            })()
+        },
+        {
+            id: 'no_excess_punctuation',
+            label: 'No excessive punctuation (!!!, ???, $$$)',
+            tip: 'Spam filters heavily flag !!!, ???, and $$$ patterns',
+            points: 8,
+            pass: !/(!!!|\?\?\?|\$\$\$|#{3,})/.test(text)
+        },
+        {
+            id: 'has_greeting',
+            label: 'Professional greeting present',
+            tip: 'Start with: Dear [Name], Hello [Name], or Hi [Name]',
+            points: 8,
+            pass: /^(dear|hello|hi|greetings|good morning|good afternoon|good day)\b/i.test(text.trim())
+        },
+        {
+            id: 'has_signature',
+            label: 'Formal sign-off / signature present',
+            tip: 'End with: Regards, Sincerely, Best regards, Thank you',
+            points: 8,
+            pass: /(regards|sincerely|best wishes|thank you|yours faithfully|warm regards|kind regards)/i.test(lc)
+        },
+        {
+            id: 'good_length',
+            label: 'Email length in optimal range (30–300 words)',
+            tip: 'Very short (<30 words) or very long (>300 words) emails trigger spam heuristics',
+            points: 10,
+            pass: wordCount >= 30 && wordCount <= 300
+        },
+        {
+            id: 'no_unsubscribe_lang',
+            label: 'No unsubscribe / opt-out language',
+            tip: 'Avoid "unsubscribe", "opt out", "remove me" — these signal bulk email',
+            points: 8,
+            pass: !/(unsubscribe|opt.?out|remove me from|stop receiving)/i.test(lc)
+        },
+        {
+            id: 'personalized',
+            label: 'Personalized / specific content (not generic)',
+            tip: 'Reference specific order numbers, shipment IDs, names, or dates',
+            points: 8,
+            pass: (() => {
+                const specifics = ['#', 'shipment', 'order', 'invoice', 'ref', 'contract', 'part', 'po', 'quote', 'lot', 'batch'];
+                return specifics.some(s => lc.includes(s)) || wordCount > 60;
+            })()
+        },
+        {
+            id: 'no_suspicious_links',
+            label: 'No shortened / suspicious URLs',
+            tip: 'Avoid bit.ly, tinyurl, goo.gl links — use named hyperlinks or Graph attachments',
+            points: 6,
+            pass: (() => {
+                const urlMatches = text.match(/https?:\/\/[^\s]+/g) || [];
+                return urlMatches.filter(u => /bit\.ly|tinyurl|goo\.gl|t\.co|ow\.ly/i.test(u)).length === 0;
+            })()
+        },
+        {
+            id: 'no_image_only',
+            label: 'Readable text content present (not image-only)',
+            tip: 'Emails with very little text are flagged by spam filters',
+            points: 6,
+            pass: wordCount >= 15
+        },
+        {
+            id: 'professional_tone',
+            label: 'Professional business tone maintained',
+            tip: 'Avoid slang: lol, omg, wanna, gonna, pls, btw, fyi, u r, etc.',
+            points: 10,
+            pass: !/(lol|omg|wanna|gonna|sup |hey!|pls |u r |4 u\b|btw |fyi,)/i.test(lc)
+        }
+    ];
+}
+
+function runDeliverabilityCheck() {
+    const replyText = (document.getElementById('reply-body-field') || {}).value || '';
+    const email = emails.find(e => e.id === selectedEmailId);
+    const subject = email ? `RE: ${email.subject}` : '';
+
+    const checklist = document.getElementById('deliverability-checklist');
+    const scoreLabel = document.getElementById('deliverability-score-label');
+    const bar = document.getElementById('deliverability-bar');
+    if (!checklist || !scoreLabel || !bar) return;
+
+    if (replyText.trim().length < 5) {
+        checklist.innerHTML = `<div style="color: var(--text-muted); font-style: italic; font-size: 0.74rem;">Start editing the reply draft above to run anti-spam analysis...</div>`;
+        scoreLabel.textContent = '—';
+        bar.style.width = '0%';
+        return;
+    }
+
+    const rules = getDeliverabilityRules(replyText, subject);
+    const totalPoints = rules.reduce((sum, r) => sum + r.points, 0);
+    const earnedPoints = rules.filter(r => r.pass).reduce((sum, r) => sum + r.points, 0);
+    const pct = Math.round((earnedPoints / totalPoints) * 100);
+
+    // Color thresholds
+    let barColor = 'var(--neon-green)';
+    let labelColor = 'var(--neon-green)';
+    let scoreText = `${pct}%`;
+    if (pct < 50) {
+        barColor = 'var(--neon-red)';    labelColor = 'var(--neon-red)';
+    } else if (pct < 75) {
+        barColor = 'var(--neon-orange)'; labelColor = 'var(--neon-orange)';
+    } else if (pct < 90) {
+        barColor = 'var(--neon-yellow)'; labelColor = 'var(--neon-yellow)';
+    }
+
+    bar.style.width = pct + '%';
+    bar.style.background = barColor;
+    scoreLabel.textContent = scoreText;
+    scoreLabel.style.color = labelColor;
+
+    // Render bullet checklist — failed items first for immediate fix visibility
+    const sorted = [...rules].sort((a, b) => Number(b.pass) - Number(a.pass) === 0 ? 0 : b.pass ? 1 : -1);
+
+    checklist.innerHTML = sorted.map(r => {
+        const icon   = r.pass ? '✅' : '❌';
+        const rowBg  = r.pass ? 'rgba(52,199,89,0.06)'  : 'rgba(255,59,48,0.07)';
+        const rowBdr = r.pass ? 'rgba(52,199,89,0.14)'  : 'rgba(255,59,48,0.18)';
+        const txtClr = r.pass ? 'var(--text-secondary)' : 'var(--neon-red)';
+        const tipHtml = !r.pass
+            ? `<div style="margin-top:0.15rem;font-size:0.67rem;color:var(--text-muted);padding-left:1.45rem;">💡 ${r.tip}</div>`
+            : '';
+        return `
+            <div style="background:${rowBg};border:1px solid ${rowBdr};border-radius:6px;padding:0.32rem 0.6rem;line-height:1.4;">
+                <div style="display:flex;align-items:flex-start;gap:0.4rem;color:${txtClr};">
+                    <span style="font-size:0.78rem;margin-top:0.06rem;flex-shrink:0;">${icon}</span>
+                    <span style="flex:1;font-size:0.74rem;">${r.label}
+                        <span style="font-size:0.62rem;color:var(--text-muted);margin-left:0.25rem;">(+${r.points}pts)</span>
+                    </span>
+                </div>
+                ${tipHtml}
+            </div>`;
+    }).join('');
+}
