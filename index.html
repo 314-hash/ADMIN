@@ -726,6 +726,58 @@
         </div>
     </div>
 
+    <!-- Welcome Greeting Modal Overlay -->
+    <div class="modal-overlay" id="welcome-modal" style="display: none;">
+        <div class="glass-panel modal-content" style="width: 520px; text-align: center; padding: 2.25rem; border-color: var(--neon-cyan); box-shadow: var(--glow-cyan);">
+            <!-- Hexagonal S-Logo -->
+            <svg class="hex-logo-svg" width="60" height="60" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin: 0 auto 1.25rem;">
+                <polygon points="50,5 90,28 90,72 50,95 10,72 10,28" stroke="url(#logo-grad-welcome)" stroke-width="6" fill="rgba(6, 8, 20, 0.95)" />
+                <path d="M28,38 L50,22 L72,38 L72,50 L50,34 L38,43 L28,35 Z" fill="url(#cyan-grad-welcome)" />
+                <path d="M72,62 L50,78 L28,62 L28,50 L50,66 L62,57 L72,65 Z" fill="url(#blue-grad-welcome)" />
+                <defs>
+                    <linearGradient id="logo-grad-welcome" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stop-color="#00f2fe" />
+                        <stop offset="100%" stop-color="#a18cd1" />
+                    </linearGradient>
+                    <linearGradient id="cyan-grad-welcome" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stop-color="#00f2fe" />
+                        <stop offset="100%" stop-color="#4facfe" />
+                    </linearGradient>
+                    <linearGradient id="blue-grad-welcome" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stop-color="#4facfe" />
+                        <stop offset="100%" stop-color="#0062ff" />
+                    </linearGradient>
+                </defs>
+            </svg>
+            <h2 style="font-family: 'Outfit', sans-serif; font-size: 1.6rem; margin-bottom: 0.5rem; background: linear-gradient(135deg, #fff, var(--neon-cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">SignalOps Command Center</h2>
+            <p style="color: var(--text-secondary); font-size: 0.85rem; line-height: 1.6; margin-bottom: 1.5rem;">
+                Supply Chain Operations AI Triage Cockpit active.<br>
+                Microsoft 365 Outlook connection and Microsoft Graph API hooks verified.
+            </p>
+            <div class="risk-grid" style="margin-bottom: 1.5rem;">
+                <div class="risk-item" style="padding: 0.5rem;">
+                    <div style="font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase;">Outlook Feed</div>
+                    <div style="color: var(--neon-green); font-weight: bold; font-size: 0.85rem;">CONNECTED</div>
+                </div>
+                <div class="risk-item" style="padding: 0.5rem;">
+                    <div style="font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase;">Graph API</div>
+                    <div style="color: var(--neon-green); font-weight: bold; font-size: 0.85rem;">AUTHORIZED</div>
+                </div>
+                <div class="risk-item" style="padding: 0.5rem;">
+                    <div style="font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase;">Triage Engine</div>
+                    <div style="color: var(--neon-cyan); font-weight: bold; font-size: 0.85rem;">AI ACTIVE</div>
+                </div>
+                <div class="risk-item" style="padding: 0.5rem;">
+                    <div style="font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase;">Vercel Hook</div>
+                    <div style="color: var(--neon-purple); font-weight: bold; font-size: 0.85rem;">READY</div>
+                </div>
+            </div>
+            <button class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="closeWelcomeModal()">
+                Access Operations Command
+            </button>
+        </div>
+    </div>
+
     <!-- Surprise Celebration / Success Dispatch Modal -->
     <div class="modal-overlay" id="dispatch-success-modal">
         <div class="glass-panel modal-content" style="width: 480px; text-align: center; padding: 2.25rem; border-color: var(--neon-green); box-shadow: var(--glow-green); position: relative; overflow: hidden;">

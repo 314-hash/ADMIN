@@ -609,6 +609,20 @@ function closeSuccessModal() {
     setTimeout(() => {
         modal.style.display = 'none';
         modal.classList.remove('hiding');
+        
+        // Scroll smoothly to the hero/presentation top section
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+
+        // Trigger the welcome-modal greeting popup overlay
+        setTimeout(() => {
+            const welcomeModal = document.getElementById('welcome-modal');
+            if (welcomeModal) {
+                welcomeModal.style.display = 'flex';
+            }
+        }, 300); // Small timeout to wait for smooth scroll alignment
     }, 250);
 }
 
