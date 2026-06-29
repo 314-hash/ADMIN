@@ -999,9 +999,19 @@ function dec2hex(dec) {
 }
 
 function generateCodeVerifier() {
-    const array = new Uint32Array(56 / 2);
-    window.crypto.getRandomValues(array);
-    return Array.from(array, dec2hex).join('');
+    if (window.crypto && window.crypto.getRandomValues) {
+        const array = new Uint32Array(56 / 2);
+        window.crypto.getRandomValues(array);
+        return Array.from(array, dec2hex).join('');
+    } else {
+        // Safe fallback in environments completely lacking crypto.getRandomValues
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
+        let result = '';
+        for (let i = 0; i < 56; i++) {
+            result += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return result;
+    }
 }
 
 function sha256(plain) {
@@ -1026,14 +1036,14 @@ function base64urlencode(a) {
 async function generateCodeChallenge(v) {
     if (!window.crypto || !window.crypto.subtle) {
         console.warn('Crypto subtle unavailable. Using mockup PKCE challenge.');
-        return 'mock_challenge_code_verifier_hash_value_here';
+        return 'mock_challenge_code_verifier_hash_value_h'; // Valid 43-character size challenge
     }
     try {
         const hashed = await sha256(v);
         return base64urlencode(hashed);
     } catch (e) {
         console.error('Error generating PKCE code challenge:', e);
-        return 'mock_challenge_code_verifier_hash_value_here';
+        return 'mock_challenge_code_verifier_hash_value_h'; // Valid 43-character size challenge
     }
 }
 
@@ -1080,6 +1090,8 @@ function updateM365UIState(token) {
     // Welcome connect card
     const welcomeM365Card = document.getElementById('welcome-m365-card');
     
+    const isSimulatorMode = sessionStorage.getItem('offline_simulator_mode') === 'true';
+
     if (token) {
         if (badge) {
             badge.textContent = "Connected";
@@ -1115,18 +1127,25 @@ function updateM365UIState(token) {
         }
     } else {
         if (badge) {
-            badge.textContent = "Disconnected";
-            badge.className = "status-pill status-inbox";
-            badge.style.background = "rgba(255, 59, 48, 0.1)";
-            badge.style.color = "var(--neon-red)";
-            badge.style.borderColor = "rgba(255, 59, 48, 0.2)";
+            if (isSimulatorMode) {
+                badge.textContent = "Simulator Mode";
+                badge.className = "status-pill status-in-review";
+                badge.style.background = "rgba(255, 159, 67, 0.15)";
+                badge.style.color = "var(--neon-orange)";
+                badge.style.borderColor = "rgba(255, 159, 67, 0.2)";
+            } else {
+                badge.textContent = "Disconnected";
+                badge.className = "status-pill status-inbox";
+                badge.style.background = "rgba(255, 59, 48, 0.1)";
+                badge.style.color = "var(--neon-red)";
+                badge.style.borderColor = "rgba(255, 59, 48, 0.2)";
+            }
         }
         
-        if (configForm) configForm.style.display = 'flex';
+        if (configForm) configForm.style.display = isSimulatorMode ? 'none' : 'flex';
         if (connectedControls) connectedControls.style.display = 'none';
 
         // Show full-screen login splash if disconnected and not in simulator mode
-        const isSimulatorMode = sessionStorage.getItem('offline_simulator_mode') === 'true';
         if (splashScreen) {
             splashScreen.style.display = isSimulatorMode ? 'none' : 'flex';
         }
@@ -1142,9 +1161,9 @@ function updateM365UIState(token) {
             headerM365Text.textContent = "Connect M365";
         }
         
-        // Show welcome connect card
+        // Show/hide welcome connect card depending on mode
         if (welcomeM365Card) {
-            welcomeM365Card.style.display = 'block';
+            welcomeM365Card.style.display = isSimulatorMode ? 'none' : 'block';
         }
     }
 }
@@ -1182,7 +1201,18 @@ async function triggerM365Auth(clientId, tenantId) {
         const verifier = generateCodeVerifier();
         sessionStorage.setItem('m365_code_verifier', verifier);
         
-        const challenge = await generateCodeChallenge(verifier);
+        const useS256 = !!(window.crypto && window.crypto.subtle);
+        let challenge;
+        let challengeMethod;
+        
+        if (useS256) {
+            challenge = await generateCodeChallenge(verifier);
+            challengeMethod = 'S256';
+        } else {
+            console.warn('Crypto subtle unavailable (insecure context). Falling back to plain PKCE verification method.');
+            challenge = verifier;
+            challengeMethod = 'plain';
+        }
         
         // Handle insecure file:// or null origins
         let redirectUri = window.location.origin + window.location.pathname;
@@ -1198,7 +1228,7 @@ async function triggerM365Auth(clientId, tenantId) {
             `&response_mode=query` +
             `&scope=${encodeURIComponent('User.Read Mail.Read Mail.Send Files.ReadWrite offline_access')}` +
             `&code_challenge=${challenge}` +
-            `&code_challenge_method=S256`;
+            `&code_challenge_method=${challengeMethod}`;
 
         showToast('Redirecting to Microsoft 365 Login...');
         setTimeout(() => {
@@ -1220,6 +1250,8 @@ function enterSimulatorMode() {
             splashScreen.style.display = 'none';
             splashScreen.classList.remove('hiding');
             showToast('Offline Simulator Sandbox Loaded.');
+            // Update M365 UI indicators to reflect simulator mode
+            initializeM365UI();
         }, 250);
     }
 }
